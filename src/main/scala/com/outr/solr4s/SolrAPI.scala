@@ -26,28 +26,36 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
 
   override def after(request: HttpRequest, response: HttpResponse): Future[HttpResponse] = {
     request.content.collect {
-      case StringContent(value, contentType, _) if contentType == ContentType.`application/json` => {
-        parse(value) match {
-          case Left(pf) => throw new RuntimeException(s"Parsing Failure for $value (${pf.message})", pf.underlying)
-          case Right(j) => j
-        }
+      case StringContent(value, _, _) => parse(value) match {
+        case Left(pf) => throw new RuntimeException(s"Parsing Failure for $value (${pf.message})", pf.underlying)
+        case Right(j) => j
       }
     } match {
-      case Some(json) if response.content.exists(_.contentType == ContentType.`application/json`) => {
+      case Some(json) => {
+        scribe.info(s"[${request.url}] Sent: ${json.pretty(SolrAPI.printer)}")
         val responseJson = parse(response.content.get.asString) match {
           case Left(pf) => throw new RuntimeException(s"Parsing Failure (${pf.message})", pf.underlying)
           case Right(j) => j
         }
+        scribe.info(s"[${request.url}] Received: ${responseJson.pretty(SolrAPI.printer)}")
         Future.successful(
           response.withContent(
             Content.string(responseJson
               .deepMerge(Json.obj("originalRequest" -> json))
-              .pretty(Printer.spaces2), ContentType.`application/json`)
+              .pretty(SolrAPI.printer), ContentType.`application/json`)
           )
         )
       }
-      case None => Future.successful(response)
+      case _ => Future.successful(response)
     }
+  }
+}
+
+object SolrAPI {
+  val printer: Printer = Printer.spaces2.copy(dropNullValues = true)
+
+  def jsonObj(tuples: List[(String, Json)]): String = {
+    tuples.map(t => s""" "${t._1}": ${t._2.pretty(printer)}""").mkString("{", ", ", "}")
   }
 }
 
@@ -75,8 +83,13 @@ trait UpdateInterface {
   protected def updateClient: HttpClient
   def instructions: List[SolrUpdateInstruction]
   def withInstruction(instruction: SolrUpdateInstruction): UpdateInterface
-  def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = updateClient
-    .restful[Json, GeneralResponse](Json.obj(instructions.map(i => i.key -> i.value): _*))
+  def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = {
+    val jsonString = SolrAPI.jsonObj(instructions.map(i => i.key -> i.value))
+    updateClient
+      .content(Content.string(jsonString, ContentType.`application/json`))
+      .post
+      .call[GeneralResponse]
+  }
 
   def add(doc: Json,
           commitWithin: Option[Long] = None,
@@ -246,8 +259,14 @@ case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: Sc
 
   def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = {
     assert(request.nonEmpty, "No schema changes supplied")
-    client.restful[SchemaRequest, GeneralResponse](request)
+    val jsonString = SolrAPI.jsonObj(request.instructions.map(i => i.json))
+    client
+      .content(Content.string(jsonString, ContentType.`application/json`))
+      .post
+      .call[GeneralResponse]
   }
+
+  def withInstruction(instruction: SchemaInstruction): SolrSchema = copy(request = request.copy(request.instructions ::: List(instruction)))
 
   def addField(name: String,
                `type`: FieldType,
@@ -268,36 +287,30 @@ case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: Sc
                termPayloads: Boolean = false,
                required: Boolean = false,
                useDocValuesAsStored: Boolean = true,
-               large: Boolean = false): SolrSchema = {
-    val list = request.`add-field`.getOrElse(Nil) ::: List(AddField(
-      name = name,
-      `type` = `type`.name,
-      default = o(default, ""),
-      indexed = o(indexed, true),
-      stored = o(stored, true),
-      docValues = o(docValues, false),
-      sortMissingFirst = o(sortMissingFirst, false),
-      sortMissingLast = o(sortMissingLast, false),
-      multiValued = o(multiValued, false),
-      uninvertible = o(uninvertible, false),         // Always set this
-      omitNorms = omitNorms,
-      omitTermFreqAndPositions = omitTermFreqAndPositions,
-      omitPositions = omitPositions,
-      termVectors = o(termVectors, false),
-      termPositions = o(termPositions, false),
-      termOffsets = o(termOffsets, false),
-      termPayloads = o(termPayloads, false),
-      required = o(required, false),
-      useDocValuesAsStored = o(useDocValuesAsStored, true),
-      large = o(large, false)
-    ))
-    copy(request = request.copy(`add-field` = Some(list)))
-  }
+               large: Boolean = false): SolrSchema = withInstruction(AddField(
+    name = name,
+    `type` = `type`.name,
+    default = o(default, ""),
+    indexed = o(indexed, true),
+    stored = o(stored, true),
+    docValues = o(docValues, false),
+    sortMissingFirst = o(sortMissingFirst, false),
+    sortMissingLast = o(sortMissingLast, false),
+    multiValued = o(multiValued, false),
+    uninvertible = o(uninvertible, false),         // Always set this
+    omitNorms = omitNorms,
+    omitTermFreqAndPositions = omitTermFreqAndPositions,
+    omitPositions = omitPositions,
+    termVectors = o(termVectors, false),
+    termPositions = o(termPositions, false),
+    termOffsets = o(termOffsets, false),
+    termPayloads = o(termPayloads, false),
+    required = o(required, false),
+    useDocValuesAsStored = o(useDocValuesAsStored, true),
+    large = o(large, false)
+  ))
 
-  def deleteField(name: String): SolrSchema = {
-    val list = request.`delete-field`.getOrElse(Nil) ::: List(DeleteField(name))
-    copy(request = request.copy(`delete-field` = Some(list)))
-  }
+  def deleteField(name: String): SolrSchema = withInstruction(DeleteField(name))
 
   def replaceField(name: String,
                    `type`: String,
@@ -318,51 +331,43 @@ case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: Sc
                    termPayloads: Boolean = false,
                    required: Boolean = false,
                    useDocValuesAsStored: Boolean = true,
-                   large: Boolean = false): SolrSchema = {
-    val list = request.`replace-field`.getOrElse(Nil) ::: List(ReplaceField(
-        name = name,
-        `type` = `type`,
-        default = o(default, ""),
-        indexed = o(indexed, true),
-        stored = o(stored, true),
-        docValues = o(docValues, false),
-        sortMissingFirst = o(sortMissingFirst, false),
-        sortMissingLast = o(sortMissingLast, false),
-        multiValued = o(multiValued, false),
-        uninvertible = o(uninvertible, false),         // Always set this
-        omitNorms = omitNorms,
-        omitTermFreqAndPositions = omitTermFreqAndPositions,
-        omitPositions = omitPositions,
-        termVectors = o(termVectors, false),
-        termPositions = o(termPositions, false),
-        termOffsets = o(termOffsets, false),
-        termPayloads = o(termPayloads, false),
-        required = o(required, false),
-        useDocValuesAsStored = o(useDocValuesAsStored, true),
-        large = o(large, false)
-      )
+                   large: Boolean = false): SolrSchema = withInstruction(ReplaceField(
+      name = name,
+      `type` = `type`,
+      default = o(default, ""),
+      indexed = o(indexed, true),
+      stored = o(stored, true),
+      docValues = o(docValues, false),
+      sortMissingFirst = o(sortMissingFirst, false),
+      sortMissingLast = o(sortMissingLast, false),
+      multiValued = o(multiValued, false),
+      uninvertible = o(uninvertible, false),         // Always set this
+      omitNorms = omitNorms,
+      omitTermFreqAndPositions = omitTermFreqAndPositions,
+      omitPositions = omitPositions,
+      termVectors = o(termVectors, false),
+      termPositions = o(termPositions, false),
+      termOffsets = o(termOffsets, false),
+      termPayloads = o(termPayloads, false),
+      required = o(required, false),
+      useDocValuesAsStored = o(useDocValuesAsStored, true),
+      large = o(large, false)
     )
-    copy(request = request.copy(`replace-field` = Some(list)))
-  }
+  )
 
   def addCopyField(source: String, dest: String, maxChars: Int = -1): SolrSchema = {
-    val list = request.`add-copy-field`.getOrElse(Nil) ::: List(AddCopyField(source, dest, o(maxChars, -1)))
-    copy(request = request.copy(`add-copy-field` = Some(list)))
+    withInstruction(AddCopyField(source, dest, o(maxChars, -1)))
   }
 
-  def deleteCopyField(source: String, dest: String): SolrSchema = {
-    val list = request.`delete-copy-field`.getOrElse(Nil) ::: List(DeleteCopyField(source, dest))
-    copy(request = request.copy(`delete-copy-field` = Some(list)))
-  }
+  def deleteCopyField(source: String, dest: String): SolrSchema = withInstruction(DeleteCopyField(source, dest))
 }
 
-case class SchemaRequest(`add-field`: Option[List[AddField]] = None,
-                         `delete-field`: Option[List[DeleteField]] = None,
-                         `replace-field`: Option[List[ReplaceField]] = None,
-                         `add-copy-field`: Option[List[AddCopyField]] = None,
-                         `delete-copy-field`: Option[List[DeleteCopyField]] = None) {
-  def isEmpty: Boolean = `add-field`.isEmpty && `delete-field`.isEmpty && `replace-field`.isEmpty && `add-copy-field`.isEmpty
-  def nonEmpty: Boolean = !isEmpty
+case class SchemaRequest(instructions: List[SchemaInstruction] = Nil) {
+  def isEmpty: Boolean = instructions.isEmpty
+  def nonEmpty: Boolean = instructions.nonEmpty
+}
+trait SchemaInstruction {
+  def json: (String, Json)
 }
 case class AddField(name: String,
                     `type`: String,
@@ -383,8 +388,12 @@ case class AddField(name: String,
                     termPayloads: Option[Boolean],
                     required: Option[Boolean],
                     useDocValuesAsStored: Option[Boolean],
-                    large: Option[Boolean])
-case class DeleteField(name: String)
+                    large: Option[Boolean]) extends SchemaInstruction {
+  override def json: (String, Json) = "add-field" -> JsonUtil.toJson(this)
+}
+case class DeleteField(name: String) extends SchemaInstruction {
+  override def json: (String, Json) = "delete-field" -> JsonUtil.toJson(this)
+}
 case class ReplaceField(name: String,
                         `type`: String,
                         default: Option[String],
@@ -404,9 +413,15 @@ case class ReplaceField(name: String,
                         termPayloads: Option[Boolean],
                         required: Option[Boolean],
                         useDocValuesAsStored: Option[Boolean],
-                        large: Option[Boolean])
-case class AddCopyField(source: String, dest: String, maxChars: Option[Int])
-case class DeleteCopyField(source: String, dest: String)
+                        large: Option[Boolean]) extends SchemaInstruction {
+  override def json: (String, Json) = "replace-field" -> JsonUtil.toJson(this)
+}
+case class AddCopyField(source: String, dest: String, maxChars: Option[Int]) extends SchemaInstruction {
+  override def json: (String, Json) = "add-copy-field" -> JsonUtil.toJson(this)
+}
+case class DeleteCopyField(source: String, dest: String) extends SchemaInstruction {
+  override def json: (String, Json) = "delete-copy-field" -> JsonUtil.toJson(this)
+}
 
 case class CollectionsList(responseHeader: ResponseHeader, collections: List[String])
 
@@ -428,7 +443,7 @@ case class ResponseSuccess(responseHeader: ResponseHeader, core: Option[String])
 
 case class ResponseException(msg: String, rspCode: Int)
 
-case class ResponseError(metadata: List[String], msg: String, code: Int)
+case class ResponseError(metadata: List[String], details: List[Json] = Nil, msg: String, code: Int)
 
 case class CollectionSchemaResponse(responseHeader: ResponseHeader, schema: CollectionSchema)
 

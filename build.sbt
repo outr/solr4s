@@ -37,3 +37,4 @@ libraryDependencies ++= Seq(
 )
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oF")
+parallelExecution in ThisBuild := false

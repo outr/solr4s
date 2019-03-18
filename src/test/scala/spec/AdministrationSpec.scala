@@ -21,7 +21,10 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
       }
     }
     "add fields to the collection" in {
-      collection1.admin.schema.addField("name", FieldType.TextEnglish).execute().map { r =>
+      collection1.admin.schema
+        .deleteField("name")
+        .addField("name", FieldType.TextEnglish)
+        .execute().map { r =>
         if (!r.isSuccess) fail(JsonUtil.toJsonString(r))
         r.isSuccess should be(true)
       }
@@ -38,7 +41,7 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
           r.isSuccess should be(true)
         }
     }
-    /*"delete the collection" in {
+    "delete the collection" in {
       collection1.admin.delete().map { r =>
         r.isSuccess should be(true)
       }
@@ -47,7 +50,7 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
       client.api.collections.list().map { list =>
         list.collections should not contain "administrationSpec"
       }
-    }*/
+    }
   }
 
   case class Name(id: String, name: String)

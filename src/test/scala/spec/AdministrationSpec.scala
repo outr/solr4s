@@ -41,6 +41,15 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
           r.isSuccess should be(true)
         }
     }
+    "query back all records" in {
+      collection1
+        .query
+        .execute().map { r =>
+        r.response.numFound should be(4)
+        scribe.info(s"Docs: ${r.response.docs}")
+        r.response.docs.length should be(4)
+      }
+    }
     "delete the collection" in {
       collection1.admin.delete().map { r =>
         r.isSuccess should be(true)

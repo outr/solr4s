@@ -1,5 +1,6 @@
 package spec
 
+import com.outr.solr4s.query.{QueryValue, TermQuery}
 import com.outr.solr4s.{FieldType, SolrClient}
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
@@ -46,8 +47,16 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
         .query
         .execute().map { r =>
         r.response.numFound should be(4)
-        scribe.info(s"Docs: ${r.response.docs}")
         r.response.docs.length should be(4)
+      }
+    }
+    "query back one record" in {
+      collection1
+        .query(TermQuery(QueryValue("debbie"), field = Some("name")))
+        .execute().map { r =>
+        r.response.numFound should be(1)
+        (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
+        r.response.docs.length should be(1)
       }
     }
     "delete the collection" in {

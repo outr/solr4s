@@ -59,6 +59,15 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
         r.response.docs.length should be(1)
       }
     }
+    "filter back one record" in {
+      collection1
+        .query.filter(TermQuery(QueryValue("debbie"), field = Some("name")))
+        .execute().map { r =>
+        r.response.numFound should be(1)
+        (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
+        r.response.docs.length should be(1)
+      }
+    }
     "delete the collection" in {
       collection1.admin.delete().map { r =>
         r.isSuccess should be(true)

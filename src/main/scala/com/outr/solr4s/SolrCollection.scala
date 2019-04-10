@@ -8,7 +8,7 @@ class SolrCollection(val collectionName: String, val api: SolrAPI) extends Updat
 
   override protected val updateClient: HttpClient = api.client.path(Path.parse(s"/solr/$collectionName/update"))
 
-  lazy val query: SolrQuery = SolrQuery(collection = this)
+  lazy val query: SolrQuery = SolrQuery(this)
 
   override def instructions: List[SolrUpdateInstruction] = Nil
 

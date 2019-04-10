@@ -74,11 +74,24 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
     }
     "filter back one record" in {
       collection1
-        .query.filter(TermQuery(QueryValue("debbie"), field = Some("name")))
+        .query
+        .filter(TermQuery(QueryValue("debbie"), field = Some("name")))
         .execute()
         .map { r =>
           r.response.numFound should be(1)
           (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
+          r.response.docs.length should be(1)
+        }
+    }
+    "filter back one record with a param" in {
+      collection1
+        .query
+        .filter(TermQuery(QueryValue("${name}"), field = Some("name")))
+        .params("name" -> "bethany")
+        .execute()
+        .map { r =>
+          r.response.numFound should be(1)
+          (r.response.docs.head \\ "name").head.asString should be(Some("Bethany"))
           r.response.docs.length should be(1)
         }
     }

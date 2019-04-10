@@ -1,7 +1,7 @@
 package spec
 
-import com.outr.solr4s.query.{QueryValue, TermQuery}
-import com.outr.solr4s.{Direction, FieldType, SolrClient, Sort}
+import com.outr.solr4s.admin.query.{QueryValue, TermQuery}
+import com.outr.solr4s.admin.{Direction, FieldType, SolrClient, Sort}
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
 

@@ -14,8 +14,10 @@ case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRe
   def offset(offset: Int): SolrQuery = modify(_.copy(offset = offset))
   def limit(limit: Int): SolrQuery = modify(_.copy(limit = limit))
   def fields(fields: String*): SolrQuery = modify(_.copy(fields = fields.toList))
+  def defType(defType: String): SolrQuery = modify(_.copy(defType = Some(defType)))
+  def sort(sort: Sort*): SolrQuery = modify(_.copy(sort = sort.toList))
 
-  // TODO: support sort, facet, and params
+  // TODO: support facet, and params
 
   def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = collection
     .api
@@ -28,18 +30,34 @@ case class QueryRequest(query: Query = MatchAllQuery,
                         filters: List[Query] = Nil,
                         offset: Int = 0,
                         limit: Int = 100,
-                        fields: List[String] = Nil) {
+                        fields: List[String] = List("*", "score"),
+                        defType: Option[String] = None,
+                        sort: List[Sort] = Nil) {
   def toJSON: Json = {
     var json = Json.obj(
       "query" -> Json.fromString(query.asString),
       "offset" -> Json.fromInt(offset),
       "limit" -> Json.fromInt(limit)
     )
+    def merge(entries: (String, Json)*): Unit = json = json.deepMerge(Json.obj(entries: _*))
     if (filters.nonEmpty) {
-      json = json.deepMerge(Json.obj("filter" -> Json.arr(filters.map(f => Json.fromString(f.asString)): _*)))
+      merge("filter" -> Json.arr(filters.map(f => Json.fromString(f.asString)): _*))
     }
     if (fields.nonEmpty) {
-      json = json.deepMerge(Json.obj("fields" -> Json.arr(fields.map(Json.fromString): _*)))
+      merge("fields" -> Json.arr(fields.map(Json.fromString): _*))
+    }
+    defType.foreach { t =>
+      merge("defType" -> Json.fromString(t))
+    }
+    if (sort.nonEmpty) {
+      val sortStrings = sort.map { s =>
+        val direction = s.direction match {
+          case Direction.Ascending => "asc"
+          case Direction.Descending => "desc"
+        }
+        s"${s.field} $direction"
+      }
+      merge("sort" -> Json.fromString(sortStrings.mkString(", ")))
     }
     json
   }

@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.solr4s.query.{QueryValue, TermQuery}
-import com.outr.solr4s.{FieldType, SolrClient}
+import com.outr.solr4s.{Direction, FieldType, SolrClient, Sort}
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
 
@@ -45,28 +45,42 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
     "query back all records" in {
       collection1
         .query
-        .execute().map { r =>
+        .execute()
+        .map { r =>
         r.response.numFound should be(4)
         r.response.docs.length should be(4)
       }
     }
+    "query back all records sorted by name" in {
+      collection1
+        .query
+        .sort(Sort("name", Direction.Descending))
+        .execute()
+        .map { r =>
+          r.response.numFound should be(4)
+          val names = r.response.docs.flatMap(j => (j \\ "name").head.asString)
+          names should be(List("Debbie", "Charlie", "Bethany", "Adam"))
+        }
+    }
     "query back one record" in {
       collection1
         .query(TermQuery(QueryValue("debbie"), field = Some("name")))
-        .execute().map { r =>
-        r.response.numFound should be(1)
-        (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
-        r.response.docs.length should be(1)
+        .execute()
+        .map { r =>
+          r.response.numFound should be(1)
+          (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
+          r.response.docs.length should be(1)
       }
     }
     "filter back one record" in {
       collection1
         .query.filter(TermQuery(QueryValue("debbie"), field = Some("name")))
-        .execute().map { r =>
-        r.response.numFound should be(1)
-        (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
-        r.response.docs.length should be(1)
-      }
+        .execute()
+        .map { r =>
+          r.response.numFound should be(1)
+          (r.response.docs.head \\ "name").head.asString should be(Some("Debbie"))
+          r.response.docs.length should be(1)
+        }
     }
     "delete the collection" in {
       collection1.admin.delete().map { r =>

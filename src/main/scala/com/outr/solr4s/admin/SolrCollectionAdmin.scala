@@ -8,7 +8,7 @@ class SolrCollectionAdmin(val collectionName: String, api: SolrAPI) {
   lazy val schema: SolrSchema = SolrSchema(this, api)
 
   def create(routerName: String = "",
-             numShards: Int = -1,
+             numShards: Int = 1,
              shards: List[String] = Nil,
              replicationFactor: Int = 1,
              maxShardsPerNode: Int = 1,

@@ -13,7 +13,6 @@ trait UpdateInterface {
   def withInstruction(instruction: SolrUpdateInstruction): UpdateInterface
   def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = {
     val jsonString = SolrAPI.jsonObj(instructions.map(i => i.key -> i.value))
-    println(s"JSON STRING: $jsonString")
     updateClient
       .content(Content.string(jsonString, ContentType.`application/json`))
       .post

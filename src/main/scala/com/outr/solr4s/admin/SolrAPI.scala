@@ -12,7 +12,7 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
     .url(solr.url)
     .noFailOnHttpStatus
     .dropNullValuesInJson(true)
-    .interceptor(this)
+//    .interceptor(this)
 
   lazy val collections: SolrCollections = new SolrCollections(this)
 
@@ -21,9 +21,7 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
   override def before(request: HttpRequest): Future[HttpRequest] = Future.successful(request)
 
   override def after(request: HttpRequest, response: HttpResponse): Future[HttpResponse] = {
-    request.content.foreach { content =>
-      scribe.info(s"[${request.url}] Sent: ${content.asString}")
-    }
+    scribe.info(s"[${request.url}] ${request.method}: ${request.content.map(_.asString)}")
     response.content.foreach { content =>
       scribe.info(s"[${request.url}] Received: ${content.asString}")
     }

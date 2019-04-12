@@ -8,7 +8,7 @@ import profig.JsonUtil
 class AdministrationSpec extends AsyncWordSpec with Matchers {
   "Administration" should {
     lazy val client = SolrClient()
-    lazy val collection1 = client.api.collection("administrationSpec")
+    lazy val collection1 = client.api.collection("solr4s_admin")
 
     "create a collection" in {
       collection1.admin.create(numShards = 2, waitForFinalState = true).map { r =>
@@ -22,12 +22,19 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
       }
     }
     "add fields to the collection" in {
-      collection1.admin.schema
-        .deleteField("name")
-        .addField("name", FieldType.TextEnglish)
-        .execute().map { r =>
-        if (!r.isSuccess) fail(JsonUtil.toJsonString(r))
-        r.isSuccess should be(true)
+      collection1.admin.schema.info.flatMap { response =>
+        val schema = if (response.schema.fields.exists(_.name == "name")) {
+          collection1.admin.schema.deleteField("name")
+        } else {
+          collection1.admin.schema
+        }
+
+        schema
+          .addField("name", FieldType.TextEnglish)
+          .execute().map { r =>
+          if (!r.isSuccess) fail(JsonUtil.toJsonString(r))
+          r.isSuccess should be(true)
+        }
       }
     }
     "insert a few documents" in {

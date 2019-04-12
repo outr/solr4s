@@ -8,20 +8,23 @@ import scala.concurrent.{ExecutionContext, Future}
 case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: SchemaRequest = SchemaRequest()) {
   private val client = api.client.path(Path.parse(s"/solr/${collection.collectionName}/schema"))
 
+  def isEmpty: Boolean = request.isEmpty
+  def nonEmpty: Boolean = request.nonEmpty
+
   private def o[T](value: T, default: T): Option[T] = if (value != default) {
     Some(value)
   } else {
     None
   }
 
-  def info(implicit ec: ExecutionContext): Future[CollectionSchema] = client.call[CollectionSchema]
+  def info(implicit ec: ExecutionContext): Future[CollectionSchemaResponse] = client.call[CollectionSchemaResponse]
 
   def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = {
-    assert(request.nonEmpty, "No schema changes supplied")
+    assert(nonEmpty, "No schema changes supplied")
     val jsonString = SolrAPI.jsonObj(request.instructions.map(i => i.json))
     client
-      .content(Content.string(jsonString, ContentType.`application/json`))
       .post
+      .content(Content.string(jsonString, ContentType.`application/json`))
       .call[GeneralResponse]
   }
 
@@ -36,7 +39,7 @@ case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: Sc
                sortMissingFirst: Boolean = false,
                sortMissingLast: Boolean = false,
                multiValued: Boolean = false,
-               uninvertible: Boolean = false,         // Always set this
+               uninvertible: Boolean = true,
                omitNorms: Option[Boolean] = None,
                omitTermFreqAndPositions: Option[Boolean] = None,
                omitPositions: Option[Boolean] = None,
@@ -56,7 +59,7 @@ case class SolrSchema(collection: SolrCollectionAdmin, api: SolrAPI, request: Sc
     sortMissingFirst = o(sortMissingFirst, false),
     sortMissingLast = o(sortMissingLast, false),
     multiValued = o(multiValued, false),
-    uninvertible = o(uninvertible, false),         // Always set this
+    uninvertible = o(uninvertible, true),
     omitNorms = omitNorms,
     omitTermFreqAndPositions = omitTermFreqAndPositions,
     omitPositions = omitPositions,

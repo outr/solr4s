@@ -14,7 +14,7 @@ class SolrCollectionAdmin(val collectionName: String, api: SolrAPI) {
              maxShardsPerNode: Int = 1,
              createNodeSet: List[String] = Nil,
              createNodeSetShuffle: Boolean = true,
-             collectionConfigName: String = "",
+             collectionConfigName: String = "_default",
              routerField: String = "",
              propertyName: String = "",
              autoAddReplicas: Boolean = false,
@@ -34,9 +34,9 @@ class SolrCollectionAdmin(val collectionName: String, api: SolrAPI) {
       .param("maxShardsPerNode", maxShardsPerNode, 1)
       .param("createNodeSet", createNodeSet, Nil)
       .param("createNodeSetShuffle", createNodeSetShuffle, true)
-      .param("collectionConfigName", collectionConfigName, "")
-      .param("routerField", routerField, "")
-      .param("propertyName", propertyName, "")
+      .param("collection.configName", collectionConfigName, "")
+      .param("router.field", routerField, "")
+      .param("property.name", propertyName, "")
       .param("autoAddReplicas", autoAddReplicas, false)
       .param("async", async, "")
       .param("rule", rule, "")

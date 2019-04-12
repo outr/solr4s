@@ -11,7 +11,9 @@ case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRe
 
   def apply(query: Query): SolrQuery = modify(_.copy(query = query))
   def filter(filters: Query*): SolrQuery = modify(_.copy(filters = request.filters ::: filters.toList))
+  def offset: Int = request.offset
   def offset(offset: Int): SolrQuery = modify(_.copy(offset = offset))
+  def limit: Int = request.limit
   def limit(limit: Int): SolrQuery = modify(_.copy(limit = limit))
   def fields(fields: String*): SolrQuery = modify(_.copy(fields = fields.toList))
   def defType(defType: String): SolrQuery = modify(_.copy(defType = Some(defType)))

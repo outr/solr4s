@@ -11,9 +11,9 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
     lazy val collection1 = client.api.collection("solr4s_admin")
 
     "create a collection" in {
-      collection1.admin.create(numShards = 2, waitForFinalState = true).map { r =>
+      collection1.admin.create(waitForFinalState = true).map { r =>
         r.isSuccess should be(true)
-        r.success.keys.size should be(2)
+        r.success.keys.size should be(1)
       }
     }
     "list the collections and verify the new collection" in {

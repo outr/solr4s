@@ -19,7 +19,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     }
     "create the collection" in {
       Indexed.person.collectionName should be("person")
-      Indexed.create(2).map { _ =>
+      Indexed.create().map { _ =>
         succeed
       }
     }
@@ -68,6 +68,8 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         }
     }
     // TODO: Sort by a field
+    // TODO: convert to another type
+    // TODO: Test facets
     "verify the collection exists" in {
       Indexed.client.api.collections.list().map { list =>
         list.collections should contain("person")

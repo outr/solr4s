@@ -17,7 +17,7 @@ class SolrIndexed(url: URL = url"http://localhost:8983") {
     _collections = _collections ::: List(collection.asInstanceOf[IndexedCollection[Any]])
   }
 
-  def create(numShards: Int): Future[Unit] = {
+  def create(numShards: Int = 1): Future[Unit] = {
     Future.sequence(collections.map(_.create(numShards))).map(_ => ())
   }
 

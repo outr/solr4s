@@ -1,4 +1,4 @@
-package com.outr.solr4s.admin.query
+package com.outr.solr4s.query
 
 import perfolation._
 

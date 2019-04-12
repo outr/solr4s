@@ -2,6 +2,7 @@ package spec
 
 import com.outr.solr4s.admin.FieldType
 import com.outr.solr4s.{Field, IndexedCollection, SolrIndexed}
+import com.outr.solr4s.query._
 import io.circe.Json
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
@@ -9,6 +10,9 @@ import profig.JsonUtil
 class SimpleSpec extends AsyncWordSpec with Matchers {
   "Simple spec" should {
     val adam = Person("Adam", "adam@solr4s", 21, 1.23, 4321L, enabled = true)
+    val bethany = Person("Bethany", "bethany@solr4s", 22, 1.24, 54321L, enabled = false)
+    val charlie = Person("Charlie", "charlie@solr4s", 20, 1.25, 34321L, enabled = true)
+    val debbie = Person("Debbie", "debbie@solr4s", 19, 1.26, 64321L, enabled = false)
 
     "verify the collections" in {
       Indexed.collections.map(_.collectionName) should be(List("person"))
@@ -34,8 +38,36 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         results.docs.head.version should be > 0L
       }
     }
-    // TODO: Insert a batch of documents
-    // TODO: Query back a document
+    "insert several documents" in {
+      Indexed
+        .person
+        .add(bethany, charlie, debbie)
+        .commit()
+        .execute()
+        .map { r =>
+          r.isSuccess should be(true)
+        }
+    }
+    "query back all the documents" in {
+      Indexed.person.query.execute().map { results =>
+        results.total should be(4)
+        results.docs.map(_.doc).toSet should be(Set(adam, bethany, charlie, debbie))
+        results.maxScore should be(1.0)
+      }
+    }
+    "query back bethany by name" in {
+      Indexed
+        .person
+        .query(Indexed.person.name === "bethany")
+        .execute()
+        .map { results =>
+          results.total should be(1)
+          results.docs.map(_.doc) should be(List(bethany))
+          results.docs.head.id.length should be(36)
+          results.docs.head.version should be > 0L
+        }
+    }
+    // TODO: Sort by a field
     "verify the collection exists" in {
       Indexed.client.api.collections.list().map { list =>
         list.collections should contain("person")

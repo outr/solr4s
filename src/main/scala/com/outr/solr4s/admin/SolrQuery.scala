@@ -1,7 +1,6 @@
 package com.outr.solr4s.admin
 
-import com.outr.solr4s.admin.query.{MatchAllQuery, Query}
-import io.circe.{Encoder, Json}
+import com.outr.solr4s.query.Query
 import io.youi.net.Path
 
 import scala.concurrent.{ExecutionContext, Future}

@@ -1,6 +1,6 @@
 package com.outr.solr4s.admin
 
-import com.outr.solr4s.admin.query.{MatchAllQuery, Query}
+import com.outr.solr4s.query.{MatchAllQuery, Query}
 import io.circe.{Encoder, Json}
 
 case class QueryRequest(query: Query = MatchAllQuery,

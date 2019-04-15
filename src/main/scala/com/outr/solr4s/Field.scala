@@ -1,6 +1,6 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.FieldType
+import com.outr.solr4s.admin.{Direction, FieldType, Sort}
 
 case class Field[T](name: String,
                     `type`: FieldType,
@@ -21,4 +21,8 @@ case class Field[T](name: String,
                     termPayloads: Boolean = false,
                     required: Boolean = false,
                     useDocValuesAsStored: Boolean = true,
-                    large: Boolean = false)
+                    large: Boolean = false) {
+  def apply(direction: Direction): Sort = Sort(name, direction)
+  def ascending: Sort = apply(Direction.Ascending)
+  def descending: Sort = apply(Direction.Descending)
+}

@@ -1,9 +1,10 @@
 package spec
 
-import com.outr.solr4s.admin.FieldType
+import com.outr.solr4s.admin.{FacetBucket, FieldType}
 import com.outr.solr4s.{Field, IndexedCollection, SolrIndexed}
 import com.outr.solr4s.query._
 import io.circe.Json
+import io.circe.generic.auto._
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
 
@@ -67,9 +68,48 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
           results.docs.head.version should be > 0L
         }
     }
-    // TODO: Sort by a field
-    // TODO: convert to another type
-    // TODO: Test facets
+    "query back sorting by age" in {
+      Indexed
+        .person
+        .query
+        .sort(Indexed.person.age.ascending)
+        .execute()
+        .map { results =>
+          results.total should be(4)
+          results.docs.map(_.doc.name).toSet should be(Set("Debbie", "Charlie", "Adam", "Bethany"))
+        }
+    }
+    "query back 'enabled' facets" in {
+      Indexed
+        .person
+        .query
+        .facet(Indexed.person.enabled)
+        .execute()
+        .map { results =>
+          results.total should be(4)
+          val buckets = results.facet(Indexed.person.enabled)
+          buckets.find(_.`val` == "true") should be(Some(FacetBucket("true", 2)))
+          buckets.find(_.`val` == "false") should be(Some(FacetBucket("false", 2)))
+        }
+    }
+    "query back and convert to SimplePerson" in {
+      Indexed
+        .person
+        .query
+        .sort(Indexed.person.name.ascending)
+        .fields(Indexed.person.name)
+        .as[SimplePerson]
+        .execute()
+        .map { results =>
+          results.total should be(4)
+          results.docs.map(_.doc) should be(List(
+            SimplePerson("Adam"),
+            SimplePerson("Bethany"),
+            SimplePerson("Charlie"),
+            SimplePerson("Debbie"),
+          ))
+        }
+    }
     "verify the collection exists" in {
       Indexed.client.api.collections.list().map { list =>
         list.collections should contain("person")
@@ -95,6 +135,8 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
                     progress: Double,
                     bytes: Long,
                     enabled: Boolean)
+
+  case class SimplePerson(name: String)
 
   class PersonIndex(override val solr: SolrIndexed) extends IndexedCollection[Person] {
     val name: Field[String] = Field[String]("name", FieldType.TextEnglish)

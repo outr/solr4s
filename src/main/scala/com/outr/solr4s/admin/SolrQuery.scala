@@ -23,8 +23,6 @@ case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRe
     modify(_.copy(facets = request.facets + (alias.getOrElse(name) -> f)))
   }
 
-  // TODO: support facet
-
   def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = collection
     .api
     .client

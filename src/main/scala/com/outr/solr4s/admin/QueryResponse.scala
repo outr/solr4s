@@ -1,7 +1,6 @@
 package com.outr.solr4s.admin
 
 import io.circe.Json
-import profig.JsonUtil
 
 case class QueryResponse(responseHeader: ResponseHeader,
                          response: QueryResponseData = QueryResponseData(0, 0, 0.0, Nil),
@@ -9,9 +8,15 @@ case class QueryResponse(responseHeader: ResponseHeader,
                          error: Option[ResponseError]) {
   def facet(name: String): List[FacetBucket] = {
     val json = (facets.getOrElse(throw new RuntimeException("No facets in response")) \\ name).head
-    val buckets = (json \\ "buckets").head
-    JsonUtil.fromJson[List[FacetBucket]](buckets)
+    val buckets = (json \\ "buckets").head.asArray.map(_.toList).getOrElse(Nil)
+    buckets.map { b =>
+      FacetBucket(
+        `val` = (b \\ "val").head match {
+          case j if j.isString => j.asString.getOrElse("")
+          case j => j.toString()
+        },
+        count = (b \\ "count").head.asNumber.flatMap(_.toInt).getOrElse(0)
+      )
+    }
   }
 }
-
-case class FacetBucket(`val`: String, count: Int)

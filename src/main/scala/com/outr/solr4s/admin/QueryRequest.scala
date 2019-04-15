@@ -2,9 +2,13 @@ package com.outr.solr4s.admin
 
 import com.outr.solr4s.query.{MatchAllQuery, Query}
 import io.circe.{Encoder, Json}
+import io.youi.net.Path
 import profig.JsonUtil
 
-case class QueryRequest(query: Query = MatchAllQuery,
+import scala.concurrent.{ExecutionContext, Future}
+
+case class QueryRequest(collection: SolrCollection,
+                        query: Query = MatchAllQuery,
                         filters: List[Query] = Nil,
                         offset: Int = 0,
                         limit: Int = 100,
@@ -13,6 +17,26 @@ case class QueryRequest(query: Query = MatchAllQuery,
                         sort: List[Sort] = Nil,
                         params: Map[String, String] = Map.empty,
                         facets: Map[String, FacetQuery] = Map.empty) {
+  def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = {
+    var url = collection.api.client.url
+    if (sort.nonEmpty) {
+      val sortStrings = sort.map { s =>
+        val direction = s.direction match {
+          case Direction.Ascending => "asc"
+          case Direction.Descending => "desc"
+        }
+        s"${s.field} $direction"
+      }
+      url = url.withParam("sort", sortStrings.mkString(","))
+    }
+    collection
+      .api
+      .client
+      .url(url)
+      .path(Path.parse(s"/solr/${collection.collectionName}/query"))
+      .restful[QueryRequest, QueryResponse](this)
+  }
+
   def toJSON: Json = {
     var json = Json.obj(
       "query" -> Json.fromString(query.asString),
@@ -28,16 +52,6 @@ case class QueryRequest(query: Query = MatchAllQuery,
     }
     defType.foreach { t =>
       merge("defType" -> Json.fromString(t))
-    }
-    if (sort.nonEmpty) {
-      val sortStrings = sort.map { s =>
-        val direction = s.direction match {
-          case Direction.Ascending => "asc"
-          case Direction.Descending => "desc"
-        }
-        s"${s.field} $direction"
-      }
-      merge("sort" -> Json.fromString(sortStrings.mkString(", ")))
     }
     if (params.nonEmpty) {
       val pairs = params.toList.map {

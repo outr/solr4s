@@ -1,6 +1,6 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.{FieldType, SolrCollection}
+import com.outr.solr4s.admin.SolrCollection
 import io.circe.Json
 
 import scala.concurrent.Future

@@ -1,4 +1,4 @@
-package com.outr.solr4s.admin
+package com.outr.solr4s
 
 case class FieldType(name: String)
 

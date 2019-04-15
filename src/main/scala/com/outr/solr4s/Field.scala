@@ -1,6 +1,6 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.{Direction, FieldType, Sort}
+import com.outr.solr4s.admin.{Direction, Sort}
 
 case class Field[T](name: String,
                     `type`: FieldType,

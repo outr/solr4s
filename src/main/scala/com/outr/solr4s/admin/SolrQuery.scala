@@ -1,11 +1,10 @@
 package com.outr.solr4s.admin
 
 import com.outr.solr4s.query.Query
-import io.youi.net.Path
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRequest()) {
+case class SolrQuery(request: QueryRequest) {
   def modify(f: QueryRequest => QueryRequest): SolrQuery = copy(request = f(request))
 
   def apply(query: Query): SolrQuery = modify(_.copy(query = query))
@@ -23,9 +22,5 @@ case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRe
     modify(_.copy(facets = request.facets + (alias.getOrElse(name) -> f)))
   }
 
-  def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = collection
-    .api
-    .client
-    .path(Path.parse(s"/solr/${collection.collectionName}/query"))
-    .restful[QueryRequest, QueryResponse](request)
+  def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = request.execute()(ec)
 }

@@ -1,7 +1,7 @@
 package spec
 
-import com.outr.solr4s.admin.{FacetBucket, FieldType}
-import com.outr.solr4s.{Field, IndexedCollection, SolrIndexed}
+import com.outr.solr4s.admin.FacetBucket
+import com.outr.solr4s.{Field, IndexedCollection, SolrIndexed, FieldType}
 import com.outr.solr4s.query._
 import io.circe.Json
 import io.circe.generic.auto._

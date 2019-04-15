@@ -1,5 +1,6 @@
 package com.outr.solr4s.admin
 
+import com.outr.solr4s.FieldType
 import io.youi.http.content.Content
 import io.youi.net.{ContentType, Path}
 

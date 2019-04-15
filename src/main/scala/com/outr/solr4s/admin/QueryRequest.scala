@@ -2,6 +2,7 @@ package com.outr.solr4s.admin
 
 import com.outr.solr4s.query.{MatchAllQuery, Query}
 import io.circe.{Encoder, Json}
+import profig.JsonUtil
 
 case class QueryRequest(query: Query = MatchAllQuery,
                         filters: List[Query] = Nil,
@@ -10,7 +11,8 @@ case class QueryRequest(query: Query = MatchAllQuery,
                         fields: List[String] = List("*", "score"),
                         defType: Option[String] = None,
                         sort: List[Sort] = Nil,
-                        params: Map[String, String] = Map.empty) {
+                        params: Map[String, String] = Map.empty,
+                        facets: Map[String, FacetQuery] = Map.empty) {
   def toJSON: Json = {
     var json = Json.obj(
       "query" -> Json.fromString(query.asString),
@@ -42,6 +44,10 @@ case class QueryRequest(query: Query = MatchAllQuery,
         case (key, value) => key -> Json.fromString(value)
       }
       merge("params" -> Json.obj(pairs: _*))
+    }
+    if (facets.nonEmpty) {
+      val entries = facets.toList.map(t => t._1 -> JsonUtil.toJson(t._2))
+      merge("facet" -> Json.obj(entries: _*))
     }
     json
   }

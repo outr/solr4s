@@ -18,6 +18,10 @@ case class SolrQuery(collection: SolrCollection, request: QueryRequest = QueryRe
   def defType(defType: String): SolrQuery = modify(_.copy(defType = Some(defType)))
   def sort(sort: Sort*): SolrQuery = modify(_.copy(sort = sort.toList))
   def params(params: (String, String)*): SolrQuery = modify(_.copy(params = request.params ++ params.toMap))
+  def facet(name: String, `type`: Option[String] = None, alias: Option[String] = None): SolrQuery = {
+    val f = FacetQuery(name, `type`)
+    modify(_.copy(facets = request.facets + (alias.getOrElse(name) -> f)))
+  }
 
   // TODO: support facet
 

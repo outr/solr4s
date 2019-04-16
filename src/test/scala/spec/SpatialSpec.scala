@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.solr4s.admin.Direction
-import com.outr.solr4s.query.SpatialFilter
+import com.outr.solr4s.query._
 import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed, SpatialPoint}
 import io.circe.Json
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -78,6 +78,19 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .map { results =>
           results.total should be(2)
           results.docs.head.doc.name should be("Oklahoma City")
+        }
+    }
+    "complex filtering" in {
+      Indexed
+        .city
+        .query(GroupedQuery(Condition.And,
+          oklahomaCity.filter("location", 5L),
+          noble.filter("location", 5L),
+          Indexed.city.name === "Noble")
+        )
+        .execute()
+        .map { results =>
+          results.docs.map(_.doc.name) should be(List("Noble"))
         }
     }
     /*"delete the collection" in {

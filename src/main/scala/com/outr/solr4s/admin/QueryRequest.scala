@@ -17,8 +17,24 @@ case class QueryRequest(collection: SolrCollection,
                         sort: List[Sort] = Nil,
                         params: Map[String, String] = Map.empty,
                         facets: Map[String, FacetQuery] = Map.empty) {
+  def apply(query: Query): QueryRequest = copy(query = query)
+  def filter(filters: Query*): QueryRequest = copy(filters = this.filters ::: filters.toList)
+  def offset(offset: Int): QueryRequest = copy(offset = offset)
+  def limit(limit: Int): QueryRequest = copy(limit = limit)
+  def fields(fields: String*): QueryRequest = copy(fields = fields.toList)
+  def defType(defType: String): QueryRequest = copy(defType = Some(defType))
+  def sort(sort: Sort*): QueryRequest = copy(sort = sort.toList)
+  def params(params: (String, String)*): QueryRequest = copy(params = this.params ++ params.toMap)
+  def facet(name: String, `type`: Option[String] = None, alias: Option[String] = None): QueryRequest = {
+    copy(facets = facets + (alias.getOrElse(name) -> FacetQuery(name, `type`)))
+  }
+
   def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = {
-    var url = collection.api.client.url
+    var url = collection
+      .api
+      .client
+      .url
+      .withParam("q", query.asString)
     if (sort.nonEmpty) {
       val sortStrings = sort.map { s =>
         val direction = s.direction match {
@@ -28,6 +44,9 @@ case class QueryRequest(collection: SolrCollection,
         s"${s.field} $direction"
       }
       url = url.withParam("sort", sortStrings.mkString(","))
+    }
+    filters.foreach { q =>
+      url = url.withParam("fq", q.asString)
     }
     collection
       .api
@@ -39,14 +58,10 @@ case class QueryRequest(collection: SolrCollection,
 
   def toJSON: Json = {
     var json = Json.obj(
-      "query" -> Json.fromString(query.asString),
       "offset" -> Json.fromInt(offset),
       "limit" -> Json.fromInt(limit)
     )
     def merge(entries: (String, Json)*): Unit = json = json.deepMerge(Json.obj(entries: _*))
-    if (filters.nonEmpty) {
-      merge("filter" -> Json.arr(filters.map(f => Json.fromString(f.asString)): _*))
-    }
     if (fields.nonEmpty) {
       merge("fields" -> Json.arr(fields.map(Json.fromString): _*))
     }

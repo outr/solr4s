@@ -1,12 +1,12 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.{SolrQuery, Sort}
+import com.outr.solr4s.admin.{QueryRequest, Sort}
 import com.outr.solr4s.query.Query
 import io.circe.{Decoder, Json}
 
 import scala.concurrent.{ExecutionContext, Future}
 
-case class QueryBuilder[I](converter: Json => I, query: SolrQuery) {
+case class QueryBuilder[I](converter: Json => I, query: QueryRequest) {
   def apply(query: Query): QueryBuilder[I] = copy(query = this.query(query))
   def filter(filters: Query*): QueryBuilder[I] = copy(query = this.query.filter(filters: _*))
   def offset: Int = query.offset

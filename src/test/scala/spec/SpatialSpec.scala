@@ -1,6 +1,7 @@
 package spec
 
 import com.outr.solr4s.admin.Direction
+import com.outr.solr4s.query.SpatialFilter
 import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed, SpatialPoint}
 import io.circe.Json
 import org.scalatest.{AsyncWordSpec, Matchers}
@@ -45,7 +46,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(6)
-          results.docs.map(_.doc.name) should be(List("Oklahoma City", "Noble", "Chicago", "New York City", "Yonkers", "Jefferson Valley"))
+          results.docs.map(_.doc.name) should be(List("Chicago", "New York City", "Oklahoma City", "Jefferson Valley", "Noble", "Yonkers"))
         }
     }
     "query back all cities sorted by distance to Oklahoma City" in {
@@ -56,7 +57,27 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(6)
-          results.docs.map(_.doc.name) should be(Nil)
+          results.docs.map(_.doc.name) should be(List("Oklahoma City", "Noble", "Chicago", "New York City", "Yonkers", "Jefferson Valley"))
+        }
+    }
+    "filter results" in {
+      Indexed
+        .city
+        .query(oklahomaCity.filter("location", 5L))
+        .execute()
+        .map { results =>
+          results.total should be(2)
+        }
+    }
+    "filter and sort results" in {
+      Indexed
+        .city
+        .query(oklahomaCity.filter("location", 5L))
+        .sort(oklahomaCity.sort("location", Direction.Ascending))
+        .execute()
+        .map { results =>
+          results.total should be(2)
+          results.docs.head.doc.name should be("Oklahoma City")
         }
     }
     /*"delete the collection" in {

@@ -21,10 +21,8 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
   override def before(request: HttpRequest): Future[HttpRequest] = Future.successful(request)
 
   override def after(request: HttpRequest, response: HttpResponse): Future[HttpResponse] = {
-    scribe.info(s"[${request.url}] ${request.method}: ${request.content.map(_.asString)}")
-    response.content.foreach { content =>
-      scribe.info(s"[${request.url}] Received: ${content.asString}")
-    }
+    scribe.info(s"[${request.url}] ${request.method}: ${request.content.map(_.asString).getOrElse("")}")
+    scribe.info(s"[${request.url.decoded}] Received: ${response.content.map(_.asString).getOrElse("")}")
     Future.successful(response)
   }
 }

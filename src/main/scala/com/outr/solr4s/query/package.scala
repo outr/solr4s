@@ -8,6 +8,13 @@ package object query {
     )
   }
 
+  implicit class QueryFieldList[T](field: Field[List[T]]) {
+    def ===(value: T): Query = TermQuery(
+      value = QueryValue(value.toString),
+      field = Some(field.name)
+    )
+  }
+
   def and(queries: Query*): Query = GroupedQuery(Condition.And, queries.toList)
   def or(queries: Query*): Query = GroupedQuery(Condition.Or, queries.toList)
   def not(queries: Query*): Query = GroupedQuery(Condition.Not, queries.toList)

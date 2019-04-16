@@ -10,10 +10,17 @@ import profig.JsonUtil
 
 class SimpleSpec extends AsyncWordSpec with Matchers {
   "Simple spec" should {
-    val adam = Person("Adam", "adam@solr4s", 21, 1.23, 4321L, enabled = true)
-    val bethany = Person("Bethany", "bethany@solr4s", 22, 1.24, 54321L, enabled = false)
-    val charlie = Person("Charlie", "charlie@solr4s", 20, 1.25, 34321L, enabled = true)
-    val debbie = Person("Debbie", "debbie@solr4s", 19, 1.26, 64321L, enabled = false)
+    val newYorkCity = "New York City"
+    val chicago = "Chicago"
+    val jeffersonValley = "Jefferson Valley"
+    val noble = "Noble"
+    val oklahomaCity = "Oklahoma City"
+    val yonkers = "Yonkers"
+
+    val adam = Person("Adam", "adam@solr4s", 21, 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
+    val bethany = Person("Bethany", "bethany@solr4s", 22, 1.24, 54321L, Nil, enabled = false)
+    val charlie = Person("Charlie", "charlie@solr4s", 20, 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
+    val debbie = Person("Debbie", "debbie@solr4s", 19, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
 
     "verify the collections" in {
       Indexed.collections.map(_.collectionName) should be(List("person"))
@@ -68,6 +75,15 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
           results.docs.head.version should be > 0L
         }
     }
+    "query back by age" in {
+      Indexed
+        .person
+        .query(Indexed.person.age === 21)
+        .execute()
+        .map { results =>
+          results.docs.map(_.doc.name) should be(List("Adam"))
+        }
+    }
     "query back sorting by age" in {
       Indexed
         .person
@@ -77,6 +93,28 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .map { results =>
           results.total should be(4)
           results.docs.map(_.doc.name).toSet should be(Set("Debbie", "Charlie", "Adam", "Bethany"))
+        }
+    }
+    "query back by city" in {
+      Indexed
+        .person
+        .query
+        .filter(Indexed.person.cities === newYorkCity)
+        .sort(Indexed.person.name.ascending)
+        .execute()
+        .map { results =>
+          results.docs.map(_.doc.name) should be(List("Adam", "Debbie"))
+        }
+    }
+    "query back by exact cities" in {
+      Indexed
+        .person
+        .query
+        .filter((Indexed.person.cities === chicago) and (Indexed.person.cities === jeffersonValley))
+        .sort(Indexed.person.name.ascending)
+        .execute()
+        .map { results =>
+          results.docs.map(_.doc.name) should be(List("Charlie"))
         }
     }
     "query back 'enabled' facets" in {
@@ -134,17 +172,19 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
                     age: Int,
                     progress: Double,
                     bytes: Long,
+                    cities: List[String] = Nil,
                     enabled: Boolean)
 
   case class SimplePerson(name: String)
 
   class PersonIndex(override val solr: SolrIndexed) extends IndexedCollection[Person] {
     val name: Field[String] = Field[String]("name", FieldType.TextEnglish)
+    val email: Field[String] = Field[String]("email", FieldType.TextEnglish)
     val age: Field[Int] = Field[Int]("age", FieldType.IntPoint)
     val progress: Field[Double] = Field[Double]("progress", FieldType.DoublePoint)
     val bytes: Field[Long] = Field[Long]("bytes", FieldType.LongPoint)
+    val cities: Field[List[String]] = Field[List[String]]("cities", FieldType.TextEnglish, multiValued = true)
     val enabled: Field[Boolean] = Field[Boolean]("enabled", FieldType.Boolean)
-    val email: Field[String] = Field[String]("email", FieldType.TextEnglish)
 
     override def toJSON(i: Person): Json = JsonUtil.toJson[Person](i)
     override def fromJSON(json: Json): Person = JsonUtil.fromJson[Person](json)

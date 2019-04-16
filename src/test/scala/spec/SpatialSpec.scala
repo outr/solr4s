@@ -83,10 +83,9 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
     "complex filtering" in {
       Indexed
         .city
-        .query(GroupedQuery(Condition.And,
-          oklahomaCity.filter("location", 5L),
-          noble.filter("location", 5L),
-          Indexed.city.name === "Noble")
+        .query(oklahomaCity.filter("location", 5L)
+          .and(noble.filter("location", 5L))
+          .and(Indexed.city.name === "Noble")
         )
         .execute()
         .map { results =>

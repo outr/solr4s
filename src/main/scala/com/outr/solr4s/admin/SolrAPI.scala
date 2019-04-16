@@ -12,7 +12,7 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
     .url(solr.url)
     .noFailOnHttpStatus
     .dropNullValuesInJson(true)
-    .interceptor(this)
+//    .interceptor(this)
 
   lazy val collections: SolrCollections = new SolrCollections(this)
 

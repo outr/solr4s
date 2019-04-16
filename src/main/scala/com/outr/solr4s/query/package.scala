@@ -7,4 +7,8 @@ package object query {
       field = Some(field.name)
     )
   }
+
+  def and(queries: Query*): Query = GroupedQuery(Condition.And, queries.toList)
+  def or(queries: Query*): Query = GroupedQuery(Condition.Or, queries.toList)
+  def not(queries: Query*): Query = GroupedQuery(Condition.Not, queries.toList)
 }

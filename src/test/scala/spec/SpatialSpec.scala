@@ -16,7 +16,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
     val oklahomaCity = SpatialPoint(35.5514, -97.4075)
     val yonkers = SpatialPoint(40.9461, -73.8669)
 
-    /*"create the collection" in {
+    "create the collection" in {
       Indexed.create().map { _ =>
         succeed
       }
@@ -37,7 +37,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .map { response =>
           response.isSuccess should be(true)
         }
-    }*/
+    }
     "query back all cities" in {
       Indexed
         .city
@@ -83,16 +83,19 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
     "complex filtering" in {
       Indexed
         .city
-        .query(oklahomaCity.filter("location", 5L)
-          .and(noble.filter("location", 5L))
-          .and(Indexed.city.name === "Noble")
+        .query(
+          and(
+            oklahomaCity.filter("location", 5L),
+            noble.filter("location", 5L),
+            Indexed.city.name === "Noble"
+          )
         )
         .execute()
         .map { results =>
           results.docs.map(_.doc.name) should be(List("Noble"))
         }
     }
-    /*"delete the collection" in {
+    "delete the collection" in {
       Indexed.delete().map { _ =>
         succeed
       }
@@ -101,7 +104,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
       Indexed.client.api.collections.list().map { list =>
         list.collections should not contain "city"
       }
-    }*/
+    }
   }
 
   case class City(name: String, location: SpatialPoint)

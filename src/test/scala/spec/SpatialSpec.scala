@@ -83,7 +83,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
     "complex filtering" in {
       Indexed
         .city
-        .query(
+        .query.filter(
           and(
             oklahomaCity.filter("location", 5L),
             noble.filter("location", 5L),

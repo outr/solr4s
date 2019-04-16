@@ -30,11 +30,23 @@ case class QueryRequest(collection: SolrCollection,
   }
 
   def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = {
-    var url = collection
+    collection
       .api
       .client
-      .url
-      .withParam("q", query.asString)
+      .path(Path.parse(s"/solr/${collection.collectionName}/query"))
+      .restful[QueryRequest, QueryResponse](this)
+  }
+
+  def toJSON: Json = {
+    var json = Json.obj(
+      "query" -> Json.fromString(query.asString),
+      "offset" -> Json.fromInt(offset),
+      "limit" -> Json.fromInt(limit)
+    )
+    def merge(entries: (String, Json)*): Unit = json = json.deepMerge(Json.obj(entries: _*))
+    if (filters.nonEmpty) {
+      merge("filter" -> Json.arr(filters.map(f => Json.fromString(f.asString)): _*))
+    }
     if (sort.nonEmpty) {
       val sortStrings = sort.map { s =>
         val direction = s.direction match {
@@ -43,25 +55,8 @@ case class QueryRequest(collection: SolrCollection,
         }
         s"${s.field} $direction"
       }
-      url = url.withParam("sort", sortStrings.mkString(","))
+      merge("sort" -> Json.fromString(sortStrings.mkString(",")))
     }
-    filters.foreach { q =>
-      url = url.withParam("fq", q.asString)
-    }
-    collection
-      .api
-      .client
-      .url(url)
-      .path(Path.parse(s"/solr/${collection.collectionName}/query"))
-      .restful[QueryRequest, QueryResponse](this)
-  }
-
-  def toJSON: Json = {
-    var json = Json.obj(
-      "offset" -> Json.fromInt(offset),
-      "limit" -> Json.fromInt(limit)
-    )
-    def merge(entries: (String, Json)*): Unit = json = json.deepMerge(Json.obj(entries: _*))
     if (fields.nonEmpty) {
       merge("fields" -> Json.arr(fields.map(Json.fromString): _*))
     }

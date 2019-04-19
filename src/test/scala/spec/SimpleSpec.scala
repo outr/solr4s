@@ -17,10 +17,10 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val oklahomaCity = "Oklahoma City"
     val yonkers = "Yonkers"
 
-    val adam = Person("Adam", "adam@solr4s", 21, 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
-    val bethany = Person("Bethany", "bethany@solr4s", 22, 1.24, 54321L, Nil, enabled = false)
-    val charlie = Person("Charlie", "charlie@solr4s", 20, 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
-    val debbie = Person("Debbie", "debbie@solr4s", 19, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
+    val adam = Person("Adam", "adam@solr4s", Some(21), 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
+    val bethany = Person("Bethany", "bethany@solr4s", Some(22), 1.24, 54321L, Nil, enabled = false)
+    val charlie = Person("Charlie", "charlie@solr4s", Some(20), 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
+    val debbie = Person("Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
 
     "verify the collections" in {
       Indexed.collections.map(_.collectionName) should be(List("person"))
@@ -169,7 +169,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
 
   case class Person(name: String,
                     email: String,
-                    age: Int,
+                    age: Option[Int],
                     progress: Double,
                     bytes: Long,
                     cities: List[String] = Nil,

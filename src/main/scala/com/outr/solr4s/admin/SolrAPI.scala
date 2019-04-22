@@ -3,7 +3,7 @@ package com.outr.solr4s.admin
 import io.circe.{Json, Printer}
 import io.youi.client.HttpClient
 import io.youi.client.intercept.Interceptor
-import io.youi.http.{HttpRequest, HttpResponse}
+import io.youi.http.{HttpRequest, HttpResponse, HttpStatus}
 
 import scala.concurrent.Future
 
@@ -12,7 +12,7 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
     .url(solr.url)
     .noFailOnHttpStatus
     .dropNullValuesInJson(true)
-//    .interceptor(this)
+    .interceptor(this)
 
   lazy val collections: SolrCollections = new SolrCollections(this)
 
@@ -21,8 +21,10 @@ class SolrAPI(solr: SolrClient) extends Interceptor {
   override def before(request: HttpRequest): Future[HttpRequest] = Future.successful(request)
 
   override def after(request: HttpRequest, response: HttpResponse): Future[HttpResponse] = {
-    scribe.info(s"[${request.url}] ${request.method}: ${request.content.map(_.asString).getOrElse("")}")
-    scribe.info(s"[${request.url.decoded}] Received: ${response.content.map(_.asString).getOrElse("")}")
+    if (response.status != HttpStatus.OK) {
+      scribe.warn(s"[${request.url}] ${request.method}: ${request.content.map(_.asString).getOrElse("")}")
+      scribe.warn(s"[${request.url.decoded}] ${response.status.message} (${response.status.code}) Received: ${response.content.map(_.asString).getOrElse("")}")
+    }
     Future.successful(response)
   }
 }

@@ -58,10 +58,14 @@ trait IndexedCollection[I] {
       val schema = info.schema.fields.filterNot(f => f.name.startsWith("_") || f.name == "id").foldLeft(solrCollection.admin.schema) {
         case (s, f) => s.deleteField(f.name)
       }
-      schema.execute().map { response =>
-        if (!response.isSuccess) {
-          throw new RuntimeException(s"Failed to delete fields for $collectionName. ${response.error}")
+      if (schema.nonEmpty) {
+        schema.execute().map { response =>
+          if (!response.isSuccess) {
+            throw new RuntimeException(s"Failed to delete fields for $collectionName. ${response.error}")
+          }
         }
+      } else {
+        Future.successful(())
       }
     } else {
       Future.successful(())

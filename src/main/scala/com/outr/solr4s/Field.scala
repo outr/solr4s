@@ -1,6 +1,7 @@
 package com.outr.solr4s
 
 import com.outr.solr4s.admin.{Direction, Sort}
+import com.outr.solr4s.query.{Operator, Query, QueryValue, TermQuery}
 
 case class Field[T](name: String,
                     `type`: FieldType,
@@ -25,4 +26,16 @@ case class Field[T](name: String,
   def apply(direction: Direction): Sort = Sort(name, direction)
   def ascending: Sort = apply(Direction.Ascending)
   def descending: Sort = apply(Direction.Descending)
+  def filter(value: QueryValue,
+             proximity: Option[Int] = None,
+             boost: Option[Double] = None,
+             constantScore: Option[Double] = None,
+             operator: Operator = Operator.Should): Query = TermQuery(
+    value = value,
+    field = Some(name),
+    proximity = proximity,
+    boost = boost,
+    constantScore = constantScore,
+    operator = operator
+  )
 }

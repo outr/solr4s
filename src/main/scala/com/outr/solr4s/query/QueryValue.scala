@@ -14,5 +14,8 @@ object QueryValue {
   }
 
   def apply(value: String): QueryValue = Simple(value)
+  def apply(value: Boolean): QueryValue = Simple(value.toString)
   def apply(value: Int): QueryValue = Simple(value.toString)
+  def apply(value: Long): QueryValue = Simple(value.toString)
+  def apply(value: Double): QueryValue = Simple(value.toString)
 }

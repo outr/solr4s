@@ -13,11 +13,13 @@ case class SpatialPoint(latitude: Double, longitude: Double) {
     field = s"{!sfield=$field pt=$latitude,$longitude}geodist()",
     direction = direction
   )
+
+  def asString: String = s"$latitude,$longitude"
 }
 
 object SpatialPoint {
   implicit val encoder: Encoder[SpatialPoint] = new Encoder[SpatialPoint] {
-    override def apply(point: SpatialPoint): Json = Json.fromString(s"${point.latitude},${point.longitude}")
+    override def apply(point: SpatialPoint): Json = Json.fromString(point.asString)
   }
 
   implicit val decoder: Decoder[SpatialPoint] = new Decoder[SpatialPoint] {

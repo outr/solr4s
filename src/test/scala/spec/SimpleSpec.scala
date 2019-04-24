@@ -144,7 +144,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
             SimplePerson("Adam"),
             SimplePerson("Bethany"),
             SimplePerson("Charlie"),
-            SimplePerson("Debbie"),
+            SimplePerson("Debbie")
           ))
         }
     }

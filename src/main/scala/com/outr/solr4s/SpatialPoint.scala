@@ -24,12 +24,15 @@ object SpatialPoint {
 
   implicit val decoder: Decoder[SpatialPoint] = new Decoder[SpatialPoint] {
     override def apply(c: HCursor): Result[SpatialPoint] = {
-      Decoder.decodeString(c).map { s =>
-        val comma = s.indexOf(',')
-        SpatialPoint(
-          latitude = s.substring(0, comma).toDouble,
-          longitude = s.substring(comma + 1).toDouble
-        )
+      Decoder.decodeString(c) match {
+        case Left(df) => Left(df)
+        case Right(s) => {
+          val comma = s.indexOf(',')
+          Right(SpatialPoint(
+            latitude = s.substring(0, comma).toDouble,
+            longitude = s.substring(comma + 1).toDouble
+          ))
+        }
       }
     }
   }

@@ -47,7 +47,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(7)
-          results.docs.map(_.doc.name) should be(List("Chicago", "New York City", "Oklahoma City", "Jefferson Valley", "Noble", "Oklahoma", "Yonkers"))
+          results.docs.map(_.entry.name) should be(List("Chicago", "New York City", "Oklahoma City", "Jefferson Valley", "Noble", "Oklahoma", "Yonkers"))
         }
     }
     "query back all cities sorted by distance to Oklahoma City" in {
@@ -58,7 +58,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(7)
-          results.docs.map(_.doc.name) should be(List("Oklahoma City", "Oklahoma", "Noble", "Chicago", "New York City", "Yonkers", "Jefferson Valley"))
+          results.docs.map(_.entry.name) should be(List("Oklahoma City", "Oklahoma", "Noble", "Chicago", "New York City", "Yonkers", "Jefferson Valley"))
         }
     }
     "filter results" in {
@@ -78,7 +78,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(2)
-          results.docs.head.doc.name should be("Oklahoma City")
+          results.docs.head.entry.name should be("Oklahoma City")
         }
     }
     "complex filtering" in {
@@ -93,7 +93,7 @@ class SpatialSpec extends AsyncWordSpec with Matchers {
         )
         .execute()
         .map { results =>
-          results.docs.map(_.doc.name) should be(List("Noble"))
+          results.docs.map(_.entry.name) should be(List("Noble"))
         }
     }
     "delete the collection" in {

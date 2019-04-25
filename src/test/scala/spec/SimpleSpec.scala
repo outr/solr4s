@@ -39,7 +39,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     "query back the simple document" in {
       Indexed.person.query.execute().map { results =>
         results.total should be(1)
-        results.docs.map(_.doc) should be(List(adam))
+        results.docs.map(_.entry) should be(List(adam))
         results.maxScore should be(1.0)
         results.docs.head.score should be(1.0)
         results.docs.head.id should be("1")
@@ -59,7 +59,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     "query back all the documents" in {
       Indexed.person.query.execute().map { results =>
         results.total should be(4)
-        results.docs.map(_.doc).toSet should be(Set(adam, bethany, charlie, debbie))
+        results.docs.map(_.entry).toSet should be(Set(adam, bethany, charlie, debbie))
         results.maxScore should be(1.0)
       }
     }
@@ -70,7 +70,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(1)
-          results.docs.map(_.doc) should be(List(bethany))
+          results.docs.map(_.entry) should be(List(bethany))
           results.docs.head.id should be("2")
           results.docs.head.version should be > 0L
         }
@@ -81,7 +81,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .query(Indexed.person.age === 21)
         .execute()
         .map { results =>
-          results.docs.map(_.doc.name) should be(List("Adam"))
+          results.docs.map(_.entry.name) should be(List("Adam"))
         }
     }
     "query back sorting by age" in {
@@ -92,7 +92,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(4)
-          results.docs.map(_.doc.name).toSet should be(Set("Debbie", "Charlie", "Adam", "Bethany"))
+          results.docs.map(_.entry.name).toSet should be(Set("Debbie", "Charlie", "Adam", "Bethany"))
         }
     }
     "query back by city" in {
@@ -103,7 +103,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .sort(Indexed.person.name.ascending)
         .execute()
         .map { results =>
-          results.docs.map(_.doc.name) should be(List("Adam", "Debbie"))
+          results.docs.map(_.entry.name) should be(List("Adam", "Debbie"))
         }
     }
     "query back by exact cities" in {
@@ -114,7 +114,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .sort(Indexed.person.name.ascending)
         .execute()
         .map { results =>
-          results.docs.map(_.doc.name) should be(List("Charlie"))
+          results.docs.map(_.entry.name) should be(List("Charlie"))
         }
     }
     "query back 'enabled' facets" in {
@@ -140,7 +140,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .execute()
         .map { results =>
           results.total should be(4)
-          results.docs.map(_.doc) should be(List(
+          results.docs.map(_.entry) should be(List(
             SimplePerson("Adam"),
             SimplePerson("Bethany"),
             SimplePerson("Charlie"),
@@ -166,7 +166,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     "query back all records with renamed value" in {
       Indexed.person.query.execute().map { results =>
         results.total should be(4)
-        results.docs.map(_.doc.name).toSet should be(Set(adam.name, charlie.name, debbie.name, "Not Bethany"))
+        results.docs.map(_.entry.name).toSet should be(Set(adam.name, charlie.name, debbie.name, "Not Bethany"))
         results.maxScore should be(1.0)
       }
     }
@@ -182,7 +182,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     "query back all except the deleted person" in {
       Indexed.person.query.execute().map { results =>
         results.total should be(3)
-        results.docs.map(_.doc).toSet should be(Set(adam, charlie, debbie))
+        results.docs.map(_.entry).toSet should be(Set(adam, charlie, debbie))
         results.maxScore should be(1.0)
       }
     }

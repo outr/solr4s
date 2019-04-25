@@ -1,3 +1,3 @@
 package com.outr.solr4s
 
-case class QueryResult[I](doc: I, id: String, version: Long, score: Double)
+case class QueryResult[I](entry: I, id: String, version: Long, score: Double)

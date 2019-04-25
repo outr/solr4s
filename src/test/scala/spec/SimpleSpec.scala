@@ -17,10 +17,10 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val oklahomaCity = "Oklahoma City"
     val yonkers = "Yonkers"
 
-    val adam = Person("Adam", "adam@solr4s", Some(21), 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
-    val bethany = Person("Bethany", "bethany@solr4s", Some(22), 1.24, 54321L, Nil, enabled = false)
-    val charlie = Person("Charlie", "charlie@solr4s", Some(20), 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
-    val debbie = Person("Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
+    val adam = Person("1", "Adam", "adam@solr4s", Some(21), 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
+    val bethany = Person("2", "Bethany", "bethany@solr4s", Some(22), 1.24, 54321L, Nil, enabled = false)
+    val charlie = Person("3", "Charlie", "charlie@solr4s", Some(20), 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
+    val debbie = Person("4", "Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
 
     "verify the collections" in {
       Indexed.collections.map(_.collectionName) should be(List("person"))
@@ -42,7 +42,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         results.docs.map(_.doc) should be(List(adam))
         results.maxScore should be(1.0)
         results.docs.head.score should be(1.0)
-        results.docs.head.id.length should be(36)
+        results.docs.head.id should be("1")
         results.docs.head.version should be > 0L
       }
     }
@@ -71,7 +71,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         .map { results =>
           results.total should be(1)
           results.docs.map(_.doc) should be(List(bethany))
-          results.docs.head.id.length should be(36)
+          results.docs.head.id should be("2")
           results.docs.head.version should be > 0L
         }
     }
@@ -153,9 +153,26 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         list.collections should contain("person")
       }
     }
+    "update name by id" in {
+      Indexed
+        .person
+        .update(bethany.copy(name = "Not Bethany"))
+        .commit()
+        .execute()
+        .map { response =>
+          response.successOrException() should be(true)
+        }
+    }
+    "query back all records with renamed value" in {
+      Indexed.person.query.execute().map { results =>
+        results.total should be(4)
+        results.docs.map(_.doc.name).toSet should be(Set(adam.name, charlie.name, debbie.name, "Not Bethany"))
+        results.maxScore should be(1.0)
+      }
+    }
     "delete by query" in {
       Indexed.person
-        .delete(query = Some(Indexed.person.name.filter("Bethany")))
+        .delete(Indexed.person.name.filter("Not Bethany"))
         .commit()
         .execute()
         .map { response =>
@@ -183,7 +200,8 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
 
   // TODO: SBT plugin like giant-scala?
 
-  case class Person(name: String,
+  case class Person(id: String,
+                    name: String,
                     email: String,
                     age: Option[Int],
                     progress: Double,
@@ -194,6 +212,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
   case class SimplePerson(name: String)
 
   class PersonIndex(override val solr: SolrIndexed) extends IndexedCollection[Person] {
+    val id: Field[String] = Field[String]("id", FieldType.String)
     val name: Field[String] = Field[String]("name", FieldType.TextEnglish)
     val email: Field[String] = Field[String]("email", FieldType.TextEnglish)
     val age: Field[Int] = Field[Int]("age", FieldType.IntPoint)

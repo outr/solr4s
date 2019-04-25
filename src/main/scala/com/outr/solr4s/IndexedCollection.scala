@@ -22,7 +22,9 @@ trait IndexedCollection[I] {
   private lazy val bo: BatchOperations[I] = new BatchOperations[I](this, solrCollection)
 
   def add(docs: I*): BatchOperations[I] = bo.add(docs: _*)
-  def delete(id: Option[String] = None, query: Option[Query] = None): BatchOperations[I] = bo.delete(id, query)
+  def update(docs: I*): BatchOperations[I] = bo.update(docs: _*)
+  def delete(id: String): BatchOperations[I] = bo.delete(Some(id), None)
+  def delete(query: Query): BatchOperations[I] = bo.delete(None, Some(query))
   def commit(): BatchOperations[I] = bo.commit()
   def optimize(waitSearcher: Boolean = false): BatchOperations[I] = bo.optimize(waitSearcher)
 

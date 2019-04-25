@@ -18,3 +18,7 @@ trait Query {
     case _ => GroupedQuery(Condition.Not, List(this, that))
   }
 }
+
+object Query {
+  def all: Query = MatchAllQuery
+}

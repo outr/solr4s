@@ -153,6 +153,22 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         list.collections should contain("person")
       }
     }
+    "delete by query" in {
+      Indexed.person
+        .delete(query = Some(Indexed.person.name.filter("Bethany")))
+        .commit()
+        .execute()
+        .map { response =>
+          response.successOrException() should be(true)
+        }
+    }
+    "query back all except the deleted person" in {
+      Indexed.person.query.execute().map { results =>
+        results.total should be(3)
+        results.docs.map(_.doc).toSet should be(Set(adam, charlie, debbie))
+        results.maxScore should be(1.0)
+      }
+    }
     "delete the collection" in {
       Indexed.delete().map { _ =>
         succeed

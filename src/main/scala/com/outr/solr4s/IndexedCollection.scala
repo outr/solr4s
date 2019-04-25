@@ -1,6 +1,7 @@
 package com.outr.solr4s
 
 import com.outr.solr4s.admin.SolrCollection
+import com.outr.solr4s.query.Query
 import io.circe.Json
 
 import scala.concurrent.Future
@@ -21,7 +22,7 @@ trait IndexedCollection[I] {
   private lazy val bo: BatchOperations[I] = new BatchOperations[I](this, solrCollection)
 
   def add(docs: I*): BatchOperations[I] = bo.add(docs: _*)
-  def delete(id: Option[String] = None, query: Option[String] = None): BatchOperations[I] = bo.delete(id, query)
+  def delete(id: Option[String] = None, query: Option[Query] = None): BatchOperations[I] = bo.delete(id, query)
   def commit(): BatchOperations[I] = bo.commit()
   def optimize(waitSearcher: Boolean = false): BatchOperations[I] = bo.optimize(waitSearcher)
 

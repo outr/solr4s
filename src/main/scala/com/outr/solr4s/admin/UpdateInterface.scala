@@ -1,5 +1,6 @@
 package com.outr.solr4s.admin
 
+import com.outr.solr4s.query.Query
 import io.circe.Json
 import io.youi.client.HttpClient
 import io.youi.http.content.Content
@@ -26,7 +27,7 @@ trait UpdateInterface {
   }
   def commit(): UpdateInterface = withInstruction(CommitInstruction)
   def optimize(waitSearcher: Boolean = false): UpdateInterface = withInstruction(OptimizeInstruction(waitSearcher))
-  def delete(id: Option[String] = None, query: Option[String] = None): UpdateInterface = {
-    withInstruction(DeleteInstruction(id, query))
+  def delete(id: Option[String] = None, query: Option[Query] = None): UpdateInterface = {
+    withInstruction(DeleteInstruction(id, query.map(_.asString)))
   }
 }

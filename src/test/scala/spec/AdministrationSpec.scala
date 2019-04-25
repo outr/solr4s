@@ -1,7 +1,7 @@
 package spec
 
 import com.outr.solr4s.FieldType
-import com.outr.solr4s.query.{QueryValue, TermQuery}
+import com.outr.solr4s.query.{Query, QueryValue, TermQuery}
 import com.outr.solr4s.admin.{Direction, SolrClient, Sort}
 import org.scalatest.{AsyncWordSpec, Matchers}
 import profig.JsonUtil
@@ -131,7 +131,7 @@ class AdministrationSpec extends AsyncWordSpec with Matchers {
         }
     }
     "delete all records" in {
-      collection1.delete(query = Some("*:*")).commit().execute().map { r =>
+      collection1.delete(query = Some(Query.all)).commit().execute().map { r =>
         r.isSuccess should be(true)
       }
     }

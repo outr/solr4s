@@ -1,6 +1,7 @@
 package com.outr.solr4s
 
 import com.outr.solr4s.admin.{GeneralResponse, UpdateInterface}
+import com.outr.solr4s.query.Query
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -12,7 +13,7 @@ class BatchOperations[I](collection: IndexedCollection[I], update: UpdateInterfa
   }
   def commit(): BatchOperations[I] = u(update.commit())
   def optimize(waitSearcher: Boolean = false): BatchOperations[I] = u(update.optimize(waitSearcher))
-  def delete(id: Option[String] = None, query: Option[String] = None): BatchOperations[I] = u(update.delete(id, query))
+  def delete(id: Option[String] = None, query: Option[Query] = None): BatchOperations[I] = u(update.delete(id, query))
 
   def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = update.execute()(ec)
 }

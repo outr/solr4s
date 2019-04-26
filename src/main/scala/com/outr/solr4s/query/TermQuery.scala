@@ -8,8 +8,6 @@ case class TermQuery(value: QueryValue,
                      boost: Option[Double] = None,
                      constantScore: Option[Double] = None,
                      operator: Operator = Operator.Should) extends Query {
-  lazy val isPhrase: Boolean = value.value.contains(' ')
-
   override def asString: String = {
     val b = new StringBuilder
     b.append(operator.prefix)
@@ -17,9 +15,7 @@ case class TermQuery(value: QueryValue,
       b.append(f)
       b.append(':')
     }
-    if (isPhrase) b.append('"')
     b.append(value.value)
-    if (isPhrase) b.append('"')
     proximity.foreach { p =>
       b.append('~')
       b.append(p)

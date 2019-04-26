@@ -8,14 +8,19 @@ object QueryValue {
   case object All extends QueryValue {
     override def value: String = "*"
   }
-  case class Simple(value: String) extends QueryValue
+  case class Raw(value: String) extends QueryValue
   case class Range(from: QueryValue, to: QueryValue) extends QueryValue {
     override def value: String = s"[${from.value} TO ${to.value}]"
   }
 
-  def apply(value: String): QueryValue = Simple(value)
-  def apply(value: Boolean): QueryValue = Simple(value.toString)
-  def apply(value: Int): QueryValue = Simple(value.toString)
-  def apply(value: Long): QueryValue = Simple(value.toString)
-  def apply(value: Double): QueryValue = Simple(value.toString)
+  def apply(value: String): QueryValue = Raw(if (value.contains(' ')) {
+    s""""$value""""
+  } else {
+    value
+  })
+  def apply(value: Boolean): QueryValue = Raw(value.toString)
+  def apply(value: Int): QueryValue = Raw(value.toString)
+  def apply(value: Long): QueryValue = Raw(value.toString)
+  def apply(value: Double): QueryValue = Raw(value.toString)
+  def raw(value: String): QueryValue = Raw(value)
 }

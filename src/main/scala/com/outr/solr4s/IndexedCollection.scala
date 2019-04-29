@@ -30,9 +30,41 @@ trait IndexedCollection[I] {
 
   lazy val query: QueryBuilder[I] = QueryBuilder[I](fromJSON, solrCollection.query)
 
-  def create(numShards: Int, deleteSchema: Boolean = true, createSchema: Boolean = true): Future[Unit] = for {
+  def create(routerName: String = "",
+             numShards: Int = 1,
+             shards: List[String] = Nil,
+             replicationFactor: Int = 1,
+             maxShardsPerNode: Int = 1,
+             createNodeSet: List[String] = Nil,
+             createNodeSetShuffle: Boolean = true,
+             collectionConfigName: String = "_default",
+             routerField: String = "",
+             propertyName: String = "",
+             autoAddReplicas: Boolean = false,
+             async: String = "",
+             rule: String = "",
+             snitch: String = "",
+             waitForFinalState: Boolean = true,
+             deleteSchema: Boolean = true,
+             createSchema: Boolean = true): Future[Unit] = for {
     // Create the collection
-    _ <- solrCollection.admin.create(numShards = numShards, waitForFinalState = true).map { response =>
+    _ <- solrCollection.admin.create(
+      routerName = routerName,
+      numShards = numShards,
+      shards = shards,
+      replicationFactor = replicationFactor,
+      maxShardsPerNode = maxShardsPerNode,
+      createNodeSet = createNodeSet,
+      createNodeSetShuffle = createNodeSetShuffle,
+      collectionConfigName = collectionConfigName,
+      routerField = routerField,
+      propertyName = propertyName,
+      autoAddReplicas = autoAddReplicas,
+      async = async,
+      rule = rule,
+      snitch = snitch,
+      waitForFinalState = waitForFinalState
+    ).map { response =>
       if (!response.isSuccess) {
         throw new RuntimeException(s"Failed to create collection $collectionName. ${response.error}")
       }

@@ -27,7 +27,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     }
     "create the collection" in {
       Indexed.person.collectionName should be("person")
-      Indexed.create().map { _ =>
+      Indexed.createNonExistent().map { _ =>
         succeed
       }
     }

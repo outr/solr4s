@@ -186,6 +186,34 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
         results.maxScore should be(1.0)
       }
     }
+    "update Adam's email address and add Oklahoma City" in {
+      Indexed
+        .person
+        .modify("1")
+        .set(Indexed.person.email, "adam@modified")
+        .add(Indexed.person.cities, List(oklahomaCity))
+        .batch()
+        .commit()
+        .execute()
+        .map { response =>
+          response.successOrException() should be(true)
+        }
+    }
+    "query back Adam and verify new email address" in {
+      Indexed
+        .person
+        .query(Indexed.person.name === "adam")
+        .execute()
+        .map { results =>
+          results.total should be(1)
+          results.docs.map(_.entry) should be(List(adam.copy(
+            email = "adam@modified",
+            cities = List(newYorkCity, yonkers, oklahomaCity)
+          )))
+          results.docs.head.id should be("1")
+          results.docs.head.version should be > 0L
+        }
+    }
     "delete the collection" in {
       Indexed.delete().map { _ =>
         succeed

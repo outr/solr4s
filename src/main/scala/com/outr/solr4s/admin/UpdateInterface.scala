@@ -1,5 +1,6 @@
 package com.outr.solr4s.admin
 
+import com.outr.solr4s.ModifyBuilder
 import com.outr.solr4s.query.Query
 import io.circe.Json
 import io.youi.client.HttpClient
@@ -30,4 +31,5 @@ trait UpdateInterface {
   def delete(id: Option[String] = None, query: Option[Query] = None): UpdateInterface = {
     withInstruction(DeleteInstruction(id, query.map(_.asString)))
   }
+  def modify[I](builder: ModifyBuilder[I]): UpdateInterface = withInstruction(builder)
 }

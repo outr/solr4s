@@ -16,7 +16,7 @@ object QueryValue {
   def apply(value: String): QueryValue = Raw(if (value.contains(' ')) {
     s""""$value""""
   } else {
-    value
+    s"'${value.replaceAllLiterally("'", "\\'")}'"
   })
   def apply(value: Boolean): QueryValue = Raw(value.toString)
   def apply(value: Int): QueryValue = Raw(value.toString)

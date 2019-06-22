@@ -16,11 +16,12 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val noble = "Noble"
     val oklahomaCity = "Oklahoma City"
     val yonkers = "Yonkers"
+    val specialCity = "OR"
 
     val adam = Person("1", "Adam", "adam@solr4s", Some(21), 1.23, 4321L, List(newYorkCity, yonkers), enabled = true)
     val bethany = Person("2", "Bethany", "bethany@solr4s", Some(22), 1.24, 54321L, Nil, enabled = false)
     val charlie = Person("3", "Charlie", "charlie@solr4s", Some(20), 1.25, 34321L, List(chicago, jeffersonValley), enabled = true)
-    val debbie = Person("4", "Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity), enabled = false)
+    val debbie = Person("4", "Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity, specialCity), enabled = false)
 
     "verify the collections" in {
       Indexed.collections.map(_.collectionName) should be(List("person"))
@@ -212,6 +213,16 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
           )))
           results.docs.head.id should be("1")
           results.docs.head.version should be > 0L
+        }
+    }
+    "query back special city using a keyword as a value" in {
+      Indexed
+        .person
+        .query(Indexed.person.cities === "OR")
+        .execute()
+        .map { results =>
+          results.total should be(1)
+          results.docs.head.id should be("4")
         }
     }
     "delete the collection" in {

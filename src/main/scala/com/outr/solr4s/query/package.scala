@@ -4,8 +4,8 @@ import scala.language.implicitConversions
 
 package object query {
   implicit class QueryField[T](field: Field[T]) {
-    def ===(value: T): Query = TermQuery(
-      value = QueryValue(value.toString),
+    def ===(value: QueryValue): Query = TermQuery(
+      value = value,
       field = Some(field.name)
     )
   }

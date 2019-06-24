@@ -25,6 +25,10 @@ case class ModifyBuilder[I](bo: BatchOperations[I], id: String, ops: List[Modify
     withOperation(field.name, "add", values2Json(values))
   }
 
+  def addDistinct[T](field: Field[T], values: T*): ModifyBuilder[I] = {
+    withOperation(field.name, "add-distinct", values2Json(values))
+  }
+
   def remove[T](field: Field[T], values: T*): ModifyBuilder[I] = {
     withOperation(field.name, "remove", values2Json(values))
   }

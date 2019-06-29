@@ -1,6 +1,6 @@
 package com.outr.solr4s.name
 
-import org.powerscala.io.IO
+import io.youi.stream.IO
 
 object Aliases {
   private var map = Map.empty[String, Set[String]]

@@ -1,8 +1,8 @@
 name := "solr4s"
 organization := "com.outr"
 version := "1.0.6-SNAPSHOT"
-scalaVersion := "2.12.8"
-crossScalaVersions := List("2.12.8", "2.11.12")
+scalaVersion := "2.13.0"
+crossScalaVersions := List("2.13.0", "2.12.8", "2.11.12")
 parallelExecution in Test := false
 fork := true
 scalacOptions ++= Seq("-unchecked", "-deprecation")
@@ -24,16 +24,14 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.11.7"
+val youiVersion = "0.11.11"
 
-val scalaTestVersion = "3.0.5"
-val scalacticVersion = "3.0.5"
+val scalaTestVersion = "3.1.0-SNAP13"
 
 libraryDependencies ++= Seq(
   "org.scala-lang" % "scala-reflect" % scalaVersion.value,
   "io.youi" %% "youi-client" % youiVersion,
-  "org.scalactic" %% "scalactic" % scalaTestVersion % "test",
-  "org.scalatest" %% "scalatest" % scalacticVersion % "test"
+  "org.scalatest" %% "scalatest" % scalaTestVersion % "test"
 )
 
 testOptions in Test += Tests.Argument(TestFrameworks.ScalaTest, "-oF")

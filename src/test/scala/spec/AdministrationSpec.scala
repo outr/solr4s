@@ -3,7 +3,8 @@ package spec
 import com.outr.solr4s.FieldType
 import com.outr.solr4s.query.{Query, QueryValue, TermQuery}
 import com.outr.solr4s.admin.{Direction, SolrClient, Sort}
-import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.Matchers
+import org.scalatest.wordspec.AsyncWordSpec
 import profig.JsonUtil
 
 import scala.concurrent.Future

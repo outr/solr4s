@@ -4,7 +4,8 @@ import com.outr.solr4s.admin.Direction
 import com.outr.solr4s.query._
 import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed, SpatialPoint}
 import io.circe.Json
-import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.Matchers
+import org.scalatest.wordspec.AsyncWordSpec
 import profig.JsonUtil
 
 class SpatialSpec extends AsyncWordSpec with Matchers {

@@ -1,11 +1,12 @@
 package spec
 
 import com.outr.solr4s.admin.FacetBucket
-import com.outr.solr4s.{Field, IndexedCollection, SolrIndexed, FieldType}
+import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed}
 import com.outr.solr4s.query._
 import io.circe.Json
 import io.circe.generic.auto._
-import org.scalatest.{AsyncWordSpec, Matchers}
+import org.scalatest.Matchers
+import org.scalatest.wordspec.AsyncWordSpec
 import profig.JsonUtil
 
 class SimpleSpec extends AsyncWordSpec with Matchers {

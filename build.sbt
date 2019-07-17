@@ -1,6 +1,6 @@
 name := "solr4s"
 organization := "com.outr"
-version := "1.0.6"
+version := "1.0.7-SNAPSHOT"
 scalaVersion := "2.13.0"
 crossScalaVersions := List("2.13.0", "2.12.8", "2.11.12")
 parallelExecution in Test := false
@@ -24,7 +24,7 @@ developers in ThisBuild := List(
   Developer(id="darkfrog", name="Matt Hicks", email="matt@matthicks.com", url=url("http://matthicks.com"))
 )
 
-val youiVersion = "0.11.11"
+val youiVersion = "0.11.14"
 
 val scalaTestVersion = "3.1.0-SNAP13"
 

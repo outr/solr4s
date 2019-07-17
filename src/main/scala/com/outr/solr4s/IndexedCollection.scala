@@ -108,7 +108,7 @@ trait IndexedCollection[I] {
     }
     // Create new fields
     _ <- if (createSchema) {
-      val schema = fields.foldLeft(solrCollection.admin.schema) {
+      val schema = fields.filterNot(_.name == "id").foldLeft(solrCollection.admin.schema) {
         case (s, f) => {
           s.addField(
             name = f.name,

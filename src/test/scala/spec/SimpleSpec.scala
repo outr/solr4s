@@ -5,11 +5,14 @@ import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed}
 import com.outr.solr4s.query._
 import io.circe.Json
 import io.circe.generic.auto._
+import io.youi.Unique
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.JsonUtil
 
 class SimpleSpec extends AsyncWordSpec with Matchers {
+  private val collectionName: String = s"solr4s-people"
+
   "Simple spec" should {
     val newYorkCity = "New York City"
     val chicago = "Chicago"
@@ -25,10 +28,10 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val debbie = Person("4", "Debbie", "debbie@solr4s", None, 1.26, 64321L, List(noble, oklahomaCity, newYorkCity, specialCity), enabled = false)
 
     "verify the collections" in {
-      Indexed.collections.map(_.collectionName) should be(List("person"))
+      Indexed.collections.map(_.collectionName) should be(List(collectionName))
     }
     "create the collection" in {
-      Indexed.person.collectionName should be("person")
+      Indexed.person.collectionName should be(collectionName)
       Indexed.createNonExistent().map { _ =>
         succeed
       }
@@ -152,7 +155,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     }
     "verify the collection exists" in {
       Indexed.client.api.collections.list().map { list =>
-        list.collections should contain("person")
+        list.collections should contain(collectionName)
       }
     }
     "update name by id" in {
@@ -233,7 +236,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     }
     "verify the collection no longer exists" in {
       Indexed.client.api.collections.list().map { list =>
-        list.collections should not contain "person"
+        list.collections should not contain collectionName
       }
     }
   }
@@ -260,6 +263,8 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val bytes: Field[Long] = Field[Long]("bytes", FieldType.LongPoint)
     val cities: Field[List[String]] = Field[List[String]]("cities", FieldType.TextEnglish, multiValued = true)
     val enabled: Field[Boolean] = Field[Boolean]("enabled", FieldType.Boolean)
+
+    override def collectionName: String = SimpleSpec.this.collectionName
 
     override def toJSON(i: Person): Json = JsonUtil.toJson[Person](i)
     override def fromJSON(json: Json): Person = JsonUtil.fromJson[Person](json)

@@ -32,7 +32,7 @@ class SolrIndexed(url: URL = url"http://localhost:8983") {
              async: String = "",
              rule: String = "",
              snitch: String = "",
-             waitForFinalState: Boolean = false): Future[Unit] = {
+             waitForFinalState: Boolean = true): Future[Unit] = {
     Future.sequence(collections.map(_.create(
       routerName = routerName,
       numShards = numShards,
@@ -66,7 +66,7 @@ class SolrIndexed(url: URL = url"http://localhost:8983") {
                         async: String = "",
                         rule: String = "",
                         snitch: String = "",
-                        waitForFinalState: Boolean = false): Future[List[String]] = for {
+                        waitForFinalState: Boolean = true): Future[List[String]] = for {
     collectionNames <- client.api.collections.list().map(_.collections.toSet)
     newCollections = collections.filterNot(c => collectionNames.contains(c.collectionName))
     _ <- create(

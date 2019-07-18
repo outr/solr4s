@@ -1,6 +1,6 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.{SolrCollection, SolrUpdateInstruction}
+import com.outr.solr4s.admin.SolrCollection
 import com.outr.solr4s.query.Query
 import io.circe.Json
 
@@ -19,15 +19,15 @@ trait IndexedCollection[I] {
   def toJSON(i: I): Json
   def fromJSON(json: Json): I
 
-  private lazy val bo: BatchOperations[I] = new BatchOperations[I](this, solrCollection)
+  lazy val batch: BatchOperations[I] = new BatchOperations[I](this, solrCollection)
 
-  def add(docs: I*): BatchOperations[I] = bo.add(docs: _*)
-  def update(docs: I*): BatchOperations[I] = bo.update(docs: _*)
-  def delete(id: String): BatchOperations[I] = bo.delete(Some(id), None)
-  def delete(query: Query): BatchOperations[I] = bo.delete(None, Some(query))
-  def commit(): BatchOperations[I] = bo.commit()
-  def optimize(waitSearcher: Boolean = false): BatchOperations[I] = bo.optimize(waitSearcher)
-  def modify(id: String): ModifyBuilder[I] = ModifyBuilder[I](bo, id, Nil)
+  def add(docs: I*): BatchOperations[I] = batch.add(docs: _*)
+  def update(docs: I*): BatchOperations[I] = batch.update(docs: _*)
+  def delete(id: String): BatchOperations[I] = batch.delete(Some(id), None)
+  def delete(query: Query): BatchOperations[I] = batch.delete(None, Some(query))
+  def commit(): BatchOperations[I] = batch.commit()
+  def optimize(waitSearcher: Boolean = false): BatchOperations[I] = batch.optimize(waitSearcher)
+  def modify(id: String): ModifyBuilder[I] = ModifyBuilder[I](batch, id, Nil)
 
   lazy val query: QueryBuilder[I] = QueryBuilder[I](fromJSON, solrCollection.query)
 

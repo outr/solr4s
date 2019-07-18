@@ -57,6 +57,8 @@ case class ModifyBuilder[I](bo: BatchOperations[I], id: String, ops: List[Modify
   private def value2Json(value: Any): Json = value match {
     case s: String => Json.fromString(s)
     case seq: Seq[_] => Json.arr(seq.map(value2Json): _*)
+    case None => Json.Null
+    case Some(o) => value2Json(o)
     case _ => throw new RuntimeException(s"Unsupported type: $value (${value.getClass.getSimpleName})")
   }
 }

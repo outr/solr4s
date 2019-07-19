@@ -1,6 +1,6 @@
 name := "solr4s"
 organization := "com.outr"
-version := "1.0.8-SNAPSHOT"
+version := "1.0.8"
 scalaVersion := "2.13.0"
 crossScalaVersions := List("2.13.0", "2.12.8", "2.11.12")
 parallelExecution in Test := false

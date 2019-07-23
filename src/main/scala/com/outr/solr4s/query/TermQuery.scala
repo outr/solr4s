@@ -10,6 +10,9 @@ case class TermQuery(value: QueryValue,
                      operator: Operator = Operator.Should) extends Query {
   override def asString: String = {
     val b = new StringBuilder
+    if (operator == Operator.MustNot) {
+      b.append(s"*:* ")
+    }
     b.append(operator.prefix)
     field.foreach { f =>
       b.append(f)

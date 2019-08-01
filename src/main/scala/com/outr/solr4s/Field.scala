@@ -3,6 +3,8 @@ package com.outr.solr4s
 import com.outr.solr4s.admin.{Direction, Sort}
 import com.outr.solr4s.query.{Operator, Query, QueryValue, TermQuery}
 
+import scala.language.implicitConversions
+
 case class Field[T](name: String,
                     `type`: FieldType,
                     default: String = "",
@@ -38,4 +40,8 @@ case class Field[T](name: String,
     constantScore = constantScore,
     operator = operator
   )
+}
+
+object Field {
+  implicit def field2String[T](field: Field[T]): String = field.name
 }

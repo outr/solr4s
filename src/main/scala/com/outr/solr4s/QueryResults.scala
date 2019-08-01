@@ -1,6 +1,6 @@
 package com.outr.solr4s
 
-import com.outr.solr4s.admin.{FacetBucket, QueryResponse}
+import com.outr.solr4s.admin.{FacetBucket, QueryResponse, Stats}
 
 import scala.concurrent.Future
 import scribe.Execution.global
@@ -11,6 +11,8 @@ class QueryResults[I](builder: QueryBuilder[I],
   def limit: Int = builder.query.limit
   def total: Int = response.response.numFound
   def maxScore: Double = response.response.maxScore
+  def statsOption: Option[Stats] = response.stats
+  def stats: Stats = statsOption.getOrElse(throw new RuntimeException("No stats set!"))
 
   lazy val docs: List[QueryResult[I]] = response.response.docs.map { json =>
     val doc = builder.converter(json)

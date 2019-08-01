@@ -25,6 +25,19 @@ object Macros {
     withOperation[T](c)("increment", field, amount)(t)
   }
 
+  def stats[T](c: blackbox.Context)(field: c.Tree)(implicit t: c.WeakTypeTag[T]): c.Tree = {
+    import c.universe._
+
+    val stats = c.prefix.tree
+    q"""
+        import _root_.profig._
+        import _root_.com.outr.solr4s.admin.StatsField
+
+        val json = $stats.stats_fields.getOrElse($field.name, throw new RuntimeException("Unable to find stats for field: " + $field.name))
+        JsonUtil.fromJson[StatsField[$t]](json)
+     """
+  }
+
   private def withOperation[T](c: blackbox.Context)
                               (op: String, field: c.Tree, values: c.Tree*)
                               (implicit t: c.WeakTypeTag[T]): c.Tree = {

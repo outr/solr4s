@@ -25,6 +25,8 @@ case class QueryBuilder[I](converter: Json => I, query: QueryRequest) {
     }
   })
   def facet[T](field: Field[T]): QueryBuilder[I] = copy(query = this.query.facet(field.name))
+  def stats(fields: String*): QueryBuilder[I] = copy(query = query.stats(fields: _*))
+  def statsCalculateDistinct(b: Boolean = true): QueryBuilder[I] = copy(query = query.statsCalculateDistinct(b))
   def execute()(implicit ec: ExecutionContext): Future[QueryResults[I]] = query.execute()(ec).map { r =>
     new QueryResults[I](this, r)
   }

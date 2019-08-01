@@ -16,7 +16,8 @@ case class QueryRequest(collection: SolrCollection,
                         defType: Option[String] = None,
                         sort: List[Sort] = Nil,
                         params: Map[String, String] = Map.empty,
-                        facets: Map[String, FacetQuery] = Map.empty) {
+                        facets: Map[String, FacetQuery] = Map.empty,
+                        statsConfig: StatsConfig = StatsConfig()) {
   def apply(query: Query): QueryRequest = copy(query = query)
   def filter(filters: Query*): QueryRequest = copy(filters = this.filters ::: filters.toList)
   def offset(offset: Int): QueryRequest = copy(offset = offset)
@@ -28,12 +29,28 @@ case class QueryRequest(collection: SolrCollection,
   def facet(name: String, `type`: Option[String] = None, alias: Option[String] = None): QueryRequest = {
     copy(facets = facets + (alias.getOrElse(name) -> FacetQuery(name, `type`)))
   }
+  def stats(fields: String*): QueryRequest = copy(statsConfig = statsConfig.copy((statsConfig.fields ::: fields.toList).distinct))
+  def statsCalculateDistinct(b: Boolean = true): QueryRequest = copy(statsConfig = statsConfig.copy(calculateDistinct = b))
 
   def execute()(implicit ec: ExecutionContext): Future[QueryResponse] = {
+    var url = collection
+      .api
+      .client
+      .url
+      .withPath(Path.parse(s"/solr/${collection.collectionName}/query"))
+    if (statsConfig.fields.nonEmpty) {
+      url = url.withParam("stats", "on")
+      statsConfig.fields.foreach { f =>
+        url = url.withParam("stats.field", f)
+      }
+      if (statsConfig.calculateDistinct) {
+        url = url.withParam("stats.calcdistinct", "true")
+      }
+    }
     collection
       .api
       .client
-      .path(Path.parse(s"/solr/${collection.collectionName}/query"))
+      .url(url)
       .restful[QueryRequest, QueryResponse](this)
   }
 
@@ -82,3 +99,5 @@ object QueryRequest {
     override def apply(r: QueryRequest): Json = r.toJSON
   }
 }
+
+case class StatsConfig(fields: List[String] = Nil, calculateDistinct: Boolean = false)

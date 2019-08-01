@@ -229,6 +229,12 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
           results.docs.head.id should be("4")
         }
     }
+    "query back with stats" in {
+      Indexed.person.query.stats(Indexed.person.age).statsCalculateDistinct().execute().map { results =>
+        results.stats(Indexed.person.age).distinctValues should be(List(20, 21))
+        results.total should be(3)
+      }
+    }
     "delete the collection" in {
       Indexed.delete().map { _ =>
         succeed
@@ -261,7 +267,7 @@ class SimpleSpec extends AsyncWordSpec with Matchers {
     val age: Field[Int] = Field[Int]("age", FieldType.IntPoint)
     val progress: Field[Double] = Field[Double]("progress", FieldType.DoublePoint)
     val bytes: Field[Long] = Field[Long]("bytes", FieldType.LongPoint)
-    val cities: Field[List[String]] = Field[List[String]]("cities", FieldType.TextEnglish, multiValued = true)
+    val cities: Field[List[String]] = Field[List[String]]("cities", FieldType.String, multiValued = true)
     val enabled: Field[Boolean] = Field[Boolean]("enabled", FieldType.Boolean)
 
     override def collectionName: String = SimpleSpec.this.collectionName

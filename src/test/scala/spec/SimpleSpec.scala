@@ -5,13 +5,12 @@ import com.outr.solr4s.{Field, FieldType, IndexedCollection, SolrIndexed}
 import com.outr.solr4s.query._
 import io.circe.Json
 import io.circe.generic.auto._
-import io.youi.Unique
 import org.scalatest.Matchers
 import org.scalatest.wordspec.AsyncWordSpec
 import profig.JsonUtil
 
 class SimpleSpec extends AsyncWordSpec with Matchers {
-  private val collectionName: String = s"solr4s-people"
+  private val collectionName: String = s"solr4s-simple"
 
   "Simple spec" should {
     val newYorkCity = "New York City"

@@ -13,10 +13,10 @@ trait UpdateInterface {
   protected def updateClient: HttpClient
   def instructions: List[SolrUpdateInstruction]
   def withInstruction(instruction: SolrUpdateInstruction): UpdateInterface
+  def toJson: String = SolrAPI.jsonObj(instructions.map(i => i.key -> i.value))
   def execute()(implicit ec: ExecutionContext): Future[GeneralResponse] = {
-    val jsonString = SolrAPI.jsonObj(instructions.map(i => i.key -> i.value))
     updateClient
-      .content(Content.string(jsonString, ContentType.`application/json`))
+      .content(Content.string(toJson, ContentType.`application/json`))
       .post
       .call[GeneralResponse]
   }
